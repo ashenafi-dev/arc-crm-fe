@@ -1,0 +1,146 @@
+@import 'tailwindcss';
+
+:root {
+  --navy-950: #070f18;
+  --navy-900: #0c1826;
+  --navy-800: #122335;
+  --navy-700: #17324d;
+  --navy-600: #1f3f5e;
+  --ink: #10192a;
+  --ink-soft: #3a4658;
+  --paper-50: #f6f8fb;
+  --paper-100: #eef1f6;
+  --gold-400: #f2c265;
+  --gold-500: #e8a33d;
+  --gold-600: #c8842a;
+  --emerald-300: #6bcfa8;
+  --emerald-400: #2fa87e;
+  --emerald-500: #1e8c66;
+  --emerald-600: #146e50;
+  --teal-400: #21b8a4;
+
+  /* Light glass — main content */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(16, 25, 42, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --shadow-ambient: rgba(16, 25, 42, 0.06);
+  --shadow-ambient-soft: rgba(16, 25, 42, 0.04);
+
+  /* Dark glass — sidebar only */
+  --dark-glass-bg: rgba(255, 255, 255, 0.08);
+  --dark-glass-border: rgba(255, 255, 255, 0.12);
+
+  --status-draft: #8b97a3;
+  --status-amber: #c8842a;
+  --status-blue: #3865d6;
+  --status-red: #d64545;
+  --status-purple: #8b5fd6;
+  --status-green: #2ea86f;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--ink-soft);
+  background-color: var(--paper-50);
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(30, 140, 102, 0.1), transparent 55%),
+    linear-gradient(rgba(30, 140, 102, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 140, 102, 0.07) 1px, transparent 1px),
+    linear-gradient(160deg, var(--paper-50) 0%, var(--paper-100) 60%, #e9edf3 100%);
+  background-size:
+    100% 100%,
+    48px 48px,
+    48px 48px,
+    100% 100%;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Inter Tight', 'Inter', sans-serif;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 25, 42, 0.15);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 25, 42, 0.25);
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 2px var(--shadow-ambient-soft),
+    0 12px 32px -18px var(--shadow-ambient);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 2px var(--shadow-ambient-soft),
+    0 12px 32px -18px var(--shadow-ambient);
+}
+
+.glass-dark {
+  background: linear-gradient(160deg, rgba(7, 15, 24, 0.72), rgba(18, 35, 53, 0.72));
+  border: 1px solid var(--dark-glass-border);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 40px -16px rgba(7, 15, 24, 0.5);
+}
+
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--emerald-500);
+  outline-offset: 2px;
+}
+
+.blob {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: -1;
+}
