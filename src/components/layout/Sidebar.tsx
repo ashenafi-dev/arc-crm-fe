@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { ArrowRight, ChevronRight, History, LayoutGrid, LogOut, ShoppingCart, Truck, Users, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -51,6 +51,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
 
 function SidebarPanel({ onClose }: { onClose?: () => void }) {
   const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
   const [team, setTeam] = useState<Profile[]>([])
   const [focusCount, setFocusCount] = useState(0)
 
@@ -142,6 +143,7 @@ function SidebarPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <button
               onClick={async () => {
+                navigate('/', { replace: true })
                 await signOut()
                 notify.info('You have been signed out')
               }}
