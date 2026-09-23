@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+import { format } from 'date-fns'
+import { Link } from 'react-router-dom'
+import { ArrowRight, CalendarDays, HardHat, MapPin, Plus, UserCheck, Users } from 'lucide-react'
+import { notify } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { Button } from '@/components/ui/Button'
-import { LaborStatusBadge } from '@/components/ui/StatusBadge'
-import type { LaborRequest, LaborStatus, Project } from '@/types'
+import { Button, LaborStatusBadge, PageHeader } from '@/components/ui'
+import { LABOR_CREATED_EVENT, NEW_LABOR_SEARCH } from '@/constants'
+import { LABOR_STATUS_LABELS, type LaborRequest, type LaborStatus } from '@/types'
 
 const NEXT: Partial<Record<LaborStatus, LaborStatus>> = {
   requested: 'reviewed',
@@ -14,30 +16,38 @@ const NEXT: Partial<Record<LaborStatus, LaborStatus>> = {
   in_progress: 'completed',
 }
 
+const FILTERS: { key: string; label: string; statuses: LaborStatus[] | null }[] = [
+  { key: 'active', label: 'Active', statuses: ['requested', 'reviewed', 'assigned', 'in_progress'] },
+  { key: 'requested', label: 'Requested', statuses: ['requested'] },
+  { key: 'in_progress', label: 'In progress', statuses: ['assigned', 'in_progress'] },
+  { key: 'completed', label: 'Completed', statuses: ['completed'] },
+  { key: 'all', label: 'All', statuses: null },
+]
+
 function AssigneeField({ labor, onSaved }: { labor: LaborRequest; onSaved: () => void }) {
   const [value, setValue] = useState(labor.assigned_to ?? '')
   const [busy, setBusy] = useState(false)
+  const changed = value !== (labor.assigned_to ?? '')
 
   async function save() {
     setBusy(true)
     const { error } = await supabase.from('labor_requests').update({ assigned_to: value || null }).eq('id', labor.id)
     setBusy(false)
-    if (error) toast.error(error.message)
+    if (error) notify.error(`Could not update the crew lead: ${error.message}`)
     else {
-      toast.success('Assignee updated')
+      notify.success('Crew lead saved on this labor request')
       onSaved()
     }
   }
 
   return (
-    <div className="mt-2 flex items-center gap-2">
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Assign to…"
-        className="focus-ring flex-1 rounded-lg border border-black/10 bg-black/[0.03] px-2.5 py-1.5 text-xs text-[var(--ink)]"
-      />
-      <Button variant="outline" onClick={save} loading={busy} className="px-2.5 py-1.5 text-xs">Save</Button>
+    <div className="flex items-center gap-2">
+      <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Assign a crew lead…" className="field h-10 !py-0" />
+      {changed && (
+        <Button variant="outline" onClick={save} loading={busy} className="h-10 px-4">
+          Save
+        </Button>
+      )}
     </div>
   )
 }
@@ -46,9 +56,7 @@ export function LaborList() {
   const { profile } = useAuth()
   const [labor, setLabor] = useState<LaborRequest[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [projects, setProjects] = useState<Project[]>([])
-  const [form, setForm] = useState({ project_id: '', labor_type: '', workers_required: '1', location: '', description: '', required_at: '' })
+  const [filterKey, setFilterKey] = useState('active')
 
   async function load() {
     const { data } = await supabase.from('labor_requests').select('*, project:projects(*)').order('created_at', { ascending: false })
@@ -58,101 +66,108 @@ export function LaborList() {
 
   useEffect(() => {
     load()
-    supabase.from('projects').select('*').then(({ data }) => setProjects((data as Project[]) ?? []))
+    // The topbar's labor modal lives in the layout; reload when it creates one
+    window.addEventListener(LABOR_CREATED_EVENT, load)
+    return () => window.removeEventListener(LABOR_CREATED_EVENT, load)
   }, [])
 
   async function advance(l: LaborRequest) {
     const next = NEXT[l.status]
     if (!next) return
     const { error } = await supabase.from('labor_requests').update({ status: next }).eq('id', l.id)
-    if (error) toast.error(error.message)
+    if (error) notify.error(`Could not move this request: ${error.message}`)
     else {
-      toast.success(`Moved to ${next.replace('_', ' ')}`)
-      load()
-    }
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!profile) return
-    if (!form.project_id || !form.labor_type || !form.location || !form.required_at) {
-      toast.error('Fill in all required fields')
-      return
-    }
-    const requestNumber = `LR-2026-${Math.floor(1000 + Math.random() * 9000)}`
-    const { error } = await supabase.from('labor_requests').insert({
-      request_number: requestNumber,
-      project_id: form.project_id,
-      requested_by: profile.id,
-      labor_type: form.labor_type,
-      workers_required: Number(form.workers_required),
-      location: form.location,
-      description: form.description,
-      required_at: new Date(form.required_at).toISOString(),
-    })
-    if (error) toast.error(error.message)
-    else {
-      toast.success('Labor request created')
-      setShowForm(false)
-      setForm({ project_id: '', labor_type: '', workers_required: '1', location: '', description: '', required_at: '' })
+      notify.success(`Labor request moved to ${LABOR_STATUS_LABELS[next].toLowerCase()}`)
       load()
     }
   }
 
   const canAdvance = profile?.role === 'admin' || profile?.role === 'general_manager' || profile?.role === 'owner'
+  const filter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0]
+  const filtered = labor.filter((l) => !filter.statuses || filter.statuses.includes(l.status))
+  const workers = filtered.reduce((sum, l) => sum + Number(l.workers_required ?? 0), 0)
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Labor Requests</h1>
-          <p className="text-sm text-slate-400">{labor.length} requests</p>
-        </div>
-        <Button onClick={() => setShowForm((s) => !s)}>{showForm ? 'Close' : '+ New Labor Request'}</Button>
-      </div>
+      <PageHeader
+        title="Labor requests"
+        count={filtered.length}
+        subtitle={`${workers} worker${workers === 1 ? '' : 's'} across ${filtered.length} request${filtered.length === 1 ? '' : 's'}`}
+      />
 
-      {showForm && (
-        <GlassCard strong className="p-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <select value={form.project_id} onChange={(e) => setForm((f) => ({ ...f, project_id: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-slate-700">
-              <option value="">Select project</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <input placeholder="Labor type (e.g. Electricians)" value={form.labor_type} onChange={(e) => setForm((f) => ({ ...f, labor_type: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-[var(--ink)]" />
-            <input type="number" placeholder="Workers required" value={form.workers_required} onChange={(e) => setForm((f) => ({ ...f, workers_required: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-[var(--ink)]" />
-            <input placeholder="Location" value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-[var(--ink)]" />
-            <input type="datetime-local" value={form.required_at} onChange={(e) => setForm((f) => ({ ...f, required_at: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-[var(--ink)]" />
-            <input placeholder="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="focus-ring rounded-xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5 text-sm text-[var(--ink)]" />
-            <Button type="submit" className="md:col-span-2 justify-center">Create Labor Request</Button>
-          </form>
-        </GlassCard>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {loading && <p className="text-slate-500">Loading…</p>}
-        {!loading && labor.length === 0 && <p className="text-slate-500">No labor requests yet.</p>}
-        {labor.map((l) => (
-          <GlassCard key={l.id} className="p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs text-slate-500">{l.request_number}</span>
-              <LaborStatusBadge status={l.status} />
-            </div>
-            <p className="font-medium text-[var(--ink)]">{l.labor_type}</p>
-            <p className="mt-1 text-xs text-slate-400">{l.project?.name}</p>
-            <p className="mt-2 text-sm text-slate-600">{l.workers_required} workers · {l.location}</p>
-            <p className="mt-1 text-xs text-slate-500">{new Date(l.required_at).toLocaleString()}</p>
-            {l.assigned_to && (
-              <p className="mt-2 text-xs font-medium text-[var(--emerald-500)]">Assigned to {l.assigned_to}</p>
-            )}
-            {canAdvance && <AssigneeField labor={l} onSaved={load} />}
-            {canAdvance && NEXT[l.status] && (
-              <Button variant="outline" className="mt-2 w-full justify-center" onClick={() => advance(l)}>
-                Move to {NEXT[l.status]?.replace('_', ' ')}
-              </Button>
-            )}
-          </GlassCard>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {FILTERS.map((f) => (
+          <button key={f.key} className="chip focus-ring" aria-pressed={f.key === filter.key} onClick={() => setFilterKey(f.key)}>
+            {f.label}
+            <span className="text-xs opacity-60">{labor.filter((l) => !f.statuses || f.statuses.includes(l.status)).length}</span>
+          </button>
         ))}
       </div>
+
+      {loading && <p className="py-16 text-center text-sm text-slate-500">Loading labor requests…</p>}
+      {!loading && filtered.length === 0 && (
+        <div className="flex flex-col items-center gap-3 rounded-[1.75rem] bg-white px-6 py-16 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--canvas)] text-slate-400">
+            <HardHat size={24} />
+          </span>
+          <p className="text-lg font-bold text-[var(--ink)]">No labor requests here</p>
+          <p className="text-sm text-slate-500">Need a crew on site? Raise a request.</p>
+          <Link
+            to={{ search: NEW_LABOR_SEARCH }}
+            className="focus-ring mt-2 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-semibold text-white"
+          >
+            <Plus size={16} />
+            Request labor
+          </Link>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((l) => (
+          <article key={l.id} className="flex flex-col rounded-[1.5rem] bg-white">
+            <div className="flex-1 p-5">
+              <div className="flex items-center justify-between gap-2">
+                <LaborStatusBadge status={l.status} />
+                <span className="text-xs text-slate-400">{l.request_number}</span>
+              </div>
+              <p className="mt-3 text-xl font-bold text-[var(--ink)]">{l.labor_type}</p>
+              <p className="text-sm text-slate-500">{l.project?.name}</p>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-[var(--ink)]">
+                <span className="flex items-center gap-2 rounded-xl bg-[var(--canvas)] px-3 py-2">
+                  <Users size={15} className="shrink-0 text-slate-500" />
+                  {l.workers_required} workers
+                </span>
+                <span className="flex min-w-0 items-center gap-2 rounded-xl bg-[var(--canvas)] px-3 py-2">
+                  <MapPin size={15} className="shrink-0 text-slate-500" />
+                  <span className="truncate">{l.location}</span>
+                </span>
+              </div>
+              <p className="mt-3 flex items-center gap-2 text-sm text-[var(--ink-soft)]">
+                <CalendarDays size={15} className="shrink-0" />
+                {format(new Date(l.required_at), 'EEE, MMM d · h:mm a')}
+              </p>
+              {l.assigned_to && !canAdvance && (
+                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-[var(--ink)]">
+                  <UserCheck size={15} className="text-[#1e8c66]" />
+                  {l.assigned_to}
+                </p>
+              )}
+            </div>
+            {canAdvance && (
+              <div className="space-y-2 border-t border-black/[0.06] p-4">
+                <AssigneeField labor={l} onSaved={load} />
+                {NEXT[l.status] && (
+                  <Button variant="outline" className="w-full" onClick={() => advance(l)}>
+                    Move to {LABOR_STATUS_LABELS[NEXT[l.status]!].toLowerCase()}
+                    <ArrowRight size={16} />
+                  </Button>
+                )}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+
     </div>
   )
 }

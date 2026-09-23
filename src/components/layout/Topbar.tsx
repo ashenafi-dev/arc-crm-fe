@@ -1,46 +1,81 @@
-import { useLocation } from 'react-router-dom'
-import { Bell } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Bell, HardHat, Menu, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_LABELS } from '@/types'
+import { NEW_LABOR_SEARCH, NEW_REQUEST_SEARCH } from '@/constants'
+import { MOCK_NOTIFICATIONS } from '@/constants/notifications'
+import { NotificationsPanel } from './NotificationsPanel'
 
-const TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/requests': 'Purchase Requests',
-  '/requests/new': 'New Purchase Request',
-  '/labor': 'Labor Requests',
-  '/vendors': 'Vendors',
-  '/audit': 'Audit Log',
+// The create button follows the page: labor pages create labor, everything else a purchase request
+function createActionFor(pathname: string) {
+  if (pathname.startsWith('/labor')) return { search: NEW_LABOR_SEARCH, label: 'Request labor', aria: 'New labor request', icon: HardHat }
+  return { search: NEW_REQUEST_SEARCH, label: 'New request', aria: 'New purchase request', icon: Plus }
 }
 
-function titleFor(pathname: string) {
-  if (TITLES[pathname]) return TITLES[pathname]
-  if (pathname.startsWith('/requests/')) return 'Request Details'
-  return 'Arch Operations'
-}
-
-export function Topbar() {
+export function Topbar({ onMenu }: { onMenu: () => void }) {
   const { profile } = useAuth()
-  const location = useLocation()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const [query, setQuery] = useState('')
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS)
+  const [notifOpen, setNotifOpen] = useState(false)
   if (!profile) return null
+  const unread = notifications.filter((n) => !n.read).length
+  const create = createActionFor(pathname)
+
+  function handleSearch(e: FormEvent) {
+    e.preventDefault()
+    const q = query.trim()
+    navigate(q ? `/requests?q=${encodeURIComponent(q)}` : '/requests')
+  }
 
   return (
-    <header className="glass-strong sticky top-4 z-20 mb-5 flex h-16 items-center justify-between rounded-3xl px-5">
-      <div>
-        <h1 className="text-lg font-semibold text-[var(--ink)]">{titleFor(location.pathname)}</h1>
-        <p className="text-[11px] uppercase tracking-wide text-slate-500">{ROLE_LABELS[profile.role]} workspace</p>
-      </div>
-      <div className="flex items-center gap-4">
-        <button className="focus-ring relative rounded-full p-2 text-slate-500 transition-colors hover:bg-black/[0.04] hover:text-[var(--ink)]">
-          <Bell size={18} strokeWidth={1.75} />
-          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--status-red)' }} />
-        </button>
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[var(--emerald-400)] to-[var(--emerald-600)] text-xs font-bold text-white">
-            {profile.avatar_initials}
-          </div>
-          <span className="hidden text-sm font-medium text-[var(--ink)] sm:block">{profile.full_name}</span>
-        </div>
-      </div>
+    <header className="sticky top-4 z-20 mb-5 flex items-center gap-2 sm:gap-3">
+      <button
+        onClick={onMenu}
+        aria-label="Open menu"
+        className="focus-ring flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] text-white sm:h-14 sm:w-14 md:hidden"
+      >
+        <Menu size={20} />
+      </button>
+      <form
+        onSubmit={handleSearch}
+        className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-full border border-[var(--card-border)] bg-white px-4 sm:h-14 sm:px-5 shadow-[0_1px_2px_rgba(24,20,18,0.03)]"
+      >
+        <Search size={20} strokeWidth={1.75} className="shrink-0 text-[var(--ink)]" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search requests, projects or request numbers…"
+          className="min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-slate-400"
+        />
+        <Link to="/requests" title="Filters" className="focus-ring rounded-full p-1.5 text-[var(--ink-soft)] hover:bg-black/[0.04]">
+          <SlidersHorizontal size={18} strokeWidth={1.75} />
+        </Link>
+      </form>
+
+      <button
+        onClick={() => setNotifOpen(true)}
+        aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+        className="focus-ring relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[var(--card-border)] bg-white text-[var(--ink)] transition-colors hover:bg-[var(--canvas)] sm:h-14 sm:w-14"
+      >
+        <Bell size={20} strokeWidth={1.75} />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white ring-2 ring-[var(--canvas)]">
+            {unread}
+          </span>
+        )}
+      </button>
+
+      <Link
+        to={{ search: create.search }}
+        aria-label={create.aria}
+        className="focus-ring flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-sm font-semibold text-white transition-transform active:scale-[0.98] sm:h-14 sm:w-auto sm:bg-[var(--panel-dark)] sm:px-6"
+      >
+        <create.icon size={18} />
+        <span className="hidden sm:inline">{create.label}</span>
+      </Link>
+      {notifOpen && <NotificationsPanel items={notifications} onChange={setNotifications} onClose={() => setNotifOpen(false)} />}
     </header>
   )
 }

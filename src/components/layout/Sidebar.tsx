@@ -1,119 +1,172 @@
-import { NavLink } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import clsx from 'clsx'
+import { ArrowRight, ChevronRight, History, LayoutGrid, LogOut, ShoppingCart, Truck, Users, X } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_LABELS } from '@/types'
+import { Avatar } from '@/components/ui'
+import { notify } from '@/lib/notify'
+import { ROLE_LABELS, type Profile, type RequestStatus, type Role } from '@/types'
 
 const NAV = [
-  { to: '/dashboard', label: 'Dashboard', icon: GridIcon, roles: null },
-  { to: '/requests', label: 'Purchase Requests', icon: CartIcon, roles: null },
-  { to: '/labor', label: 'Labor Requests', icon: UsersIcon, roles: null },
-  { to: '/vendors', label: 'Vendors', icon: TruckIcon, roles: ['admin', 'owner', 'finance'] },
-  { to: '/audit', label: 'Audit Log', icon: ClockIcon, roles: ['admin', 'owner'] },
+  { to: '/dashboard', label: 'Overview', icon: LayoutGrid, roles: null },
+  { to: '/requests', label: 'Purchase Requests', icon: ShoppingCart, roles: null },
+  { to: '/labor', label: 'Labor Requests', icon: Users, roles: null },
+  { to: '/vendors', label: 'Vendors', icon: Truck, roles: ['admin', 'owner', 'finance'] },
+  { to: '/audit', label: 'Audit Log', icon: History, roles: ['admin', 'owner'] },
 ]
 
-export function Sidebar() {
-  const { profile, signOut } = useAuth()
+// What each role gets nudged about in the sidebar card
+const FOCUS: Record<Role, { status: RequestStatus | null; title: (n: number) => string; body: string; cta: string }> = {
+  finance: { status: 'awaiting_finance', title: (n) => `${n} request${n === 1 ? ' needs' : 's need'} your review`, body: 'Check pricing and budget to keep them moving', cta: 'Review now' },
+  general_manager: { status: 'awaiting_gm', title: (n) => `${n} request${n === 1 ? ' needs' : 's need'} your review`, body: 'Finance has cleared these for your sign-off', cta: 'Review now' },
+  owner: { status: 'awaiting_owner', title: (n) => `${n} request${n === 1 ? '' : 's'} await final approval`, body: 'Finance and the GM have already signed off', cta: 'Review now' },
+  admin: { status: 'approved', title: (n) => `${n} approved request${n === 1 ? '' : 's'} to purchase`, body: 'Record the purchase once it is paid', cta: 'Open list' },
+  employee: { status: null, title: (n) => `${n} of your request${n === 1 ? ' is' : 's are'} in progress`, body: 'Follow each one through the approval chain', cta: 'Track them' },
+}
+
+const OPEN: RequestStatus[] = ['draft', 'quote_received', 'awaiting_finance', 'awaiting_gm', 'awaiting_owner', 'approved']
+
+export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+  const { profile } = useAuth()
   if (!profile) return null
 
   return (
-    <aside className="glass fixed top-4 bottom-4 left-4 z-30 hidden w-64 flex-col rounded-3xl p-4 text-slate-600 md:flex">
-      <div className="mb-8 flex items-center gap-2 px-2 pt-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--emerald-400)] to-[var(--emerald-600)] font-black text-white">
-          A
+    <>
+      <aside className="fixed top-4 bottom-4 left-4 z-30 hidden w-64 flex-col gap-3 md:flex">
+        <SidebarPanel />
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="modal-fade-in absolute inset-0 bg-[#181412]/55 backdrop-blur-[4px]" onClick={onClose} />
+          <aside className="drawer-in absolute inset-y-0 left-0 flex w-[min(18rem,85vw)] flex-col gap-3 p-3">
+            <SidebarPanel onClose={onClose} />
+          </aside>
         </div>
-        <div>
-          <p className="text-sm font-bold tracking-wide text-[var(--ink)]">ARCH</p>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500">Operations</p>
+      )}
+    </>
+  )
+}
+
+function SidebarPanel({ onClose }: { onClose?: () => void }) {
+  const { profile, signOut } = useAuth()
+  const [team, setTeam] = useState<Profile[]>([])
+  const [focusCount, setFocusCount] = useState(0)
+
+  useEffect(() => {
+    supabase
+      .from('profiles')
+      .select('*')
+      .order('full_name')
+      .limit(6)
+      .then(({ data }) => setTeam((data as Profile[]) ?? []))
+  }, [])
+
+  useEffect(() => {
+    if (!profile) return
+    const focus = FOCUS[profile.role]
+    const base = supabase.from('purchase_requests').select('id', { count: 'exact', head: true })
+    const query = focus.status ? base.eq('status', focus.status) : base.eq('requester_id', profile.id).in('status', OPEN)
+    query.then(({ count }) => setFocusCount(count ?? 0))
+  }, [profile])
+
+  if (!profile) return null
+  const focus = FOCUS[profile.role]
+
+  return (
+    <>
+      <div className="panel-dark flex min-h-0 w-full flex-1 flex-col rounded-[1.75rem]">
+        {/* Fixed: logo */}
+        <div className="flex shrink-0 items-center gap-2.5 px-6 pt-6 pb-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-lg font-bold text-white">A</div>
+          <p className="flex-1 text-lg font-bold tracking-tight text-white">Arch Ops</p>
+          {onClose && (
+            <button onClick={onClose} aria-label="Close menu" className="focus-ring rounded-full p-2 text-white/60 hover:bg-white/10 hover:text-white">
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Scrollable: nav + team */}
+        <div className="scroll-dark min-h-0 flex-1 overflow-y-auto px-4">
+          <nav className="space-y-1">
+            {NAV.filter((item) => !item.roles || item.roles.includes(profile.role)).map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/dashboard'}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  clsx(
+                    'focus-ring flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-colors',
+                    isActive ? 'bg-white/10 font-medium text-white' : 'text-white/60 hover:bg-white/5 hover:text-white',
+                  )
+                }
+              >
+                <item.icon size={18} strokeWidth={1.6} className="shrink-0" />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="my-4 border-t border-white/10" />
+
+          <div className="mb-3 flex items-center justify-between px-2">
+            <p className="text-sm font-medium text-white">Team members</p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/70">
+              <ChevronRight size={14} />
+            </span>
+          </div>
+          <ul className="space-y-3 px-2 pb-4">
+            {team.map((member, i) => (
+              <li key={member.id} className="flex items-center gap-3">
+                <Avatar initials={member.avatar_initials} index={i} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-white">{member.full_name}</p>
+                  <p className="truncate text-xs text-white/45">{ROLE_LABELS[member.role]}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Fixed: profile + sign out */}
+        <div className="shrink-0 p-3">
+          <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] px-2.5 py-2">
+            <Avatar initials={profile.avatar_initials} size={34} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm text-white">{profile.full_name}</p>
+              <p className="truncate text-xs text-white/45">{ROLE_LABELS[profile.role]}</p>
+            </div>
+            <button
+              onClick={async () => {
+                await signOut()
+                notify.info('You have been signed out')
+              }}
+              title="Sign out"
+              aria-label="Sign out"
+              className="focus-ring rounded-full p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1">
-        {NAV.filter((item) => !item.roles || item.roles.includes(profile.role)).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/dashboard'}
-            className={({ isActive }) =>
-              clsx(
-                'focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-[var(--emerald-500)]/10 text-[var(--emerald-600)] shadow-[inset_0_0_0_1px_rgba(30,140,102,0.15)]'
-                  : 'text-slate-500 hover:bg-black/[0.03] hover:text-[var(--ink)]',
-              )
-            }
-          >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="mt-4 border-t border-black/[0.06] pt-4">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[0.05] text-xs font-bold text-[var(--ink)]">
-            {profile.avatar_initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[var(--ink)]">{profile.full_name}</p>
-            <p className="truncate text-xs text-slate-500">{ROLE_LABELS[profile.role]}</p>
-          </div>
-        </div>
-        <button
-          onClick={signOut}
-          className="focus-ring mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-black/[0.03] hover:text-[var(--status-red)]"
-        >
-          <LogoutIcon className="h-4 w-4" />
-          Sign out
-        </button>
-      </div>
-    </aside>
-  )
-}
-
-function GridIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  )
-}
-function CartIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <circle cx="9" cy="20" r="1.5" /><circle cx="17" cy="20" r="1.5" />
-      <path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 2-1.6L20 7H5.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <circle cx="8" cy="8" r="3.2" /><path d="M2.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" strokeLinecap="round" />
-      <circle cx="17" cy="9" r="2.6" /><path d="M14.5 14.3c2.5.2 4.7 2.4 4.7 5.7" strokeLinecap="round" />
-    </svg>
-  )
-}
-function TruckIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="1.5" y="6" width="12" height="10" rx="1.2" /><path d="M13.5 10h4l3.5 3.5V16h-7.5z" strokeLinejoin="round" />
-      <circle cx="6" cy="18" r="1.8" /><circle cx="16.5" cy="18" r="1.8" />
-    </svg>
-  )
-}
-function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.2 2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function LogoutIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+      {/* Role focus card, sits under the menu like the reference */}
+      <Link
+        to={focusCount > 0 && focus.status ? `/requests?status=${focus.status}` : '/requests'}
+        onClick={onClose}
+        className="cta-card focus-ring group block shrink-0 rounded-[1.75rem] p-5 text-white"
+      >
+        <p className="text-xl leading-tight font-bold">{focusCount > 0 ? focus.title(focusCount) : 'You are all caught up'}</p>
+        <p className="mt-1.5 text-xs text-white/75">{focusCount > 0 ? focus.body : 'Nothing is waiting on you right now'}</p>
+        <span className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-white py-3 text-sm font-medium text-[var(--ink)]">
+          {focusCount > 0 ? focus.cta : 'View requests'}
+          <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </Link>
+    </>
   )
 }

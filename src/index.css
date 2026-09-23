@@ -38,6 +38,9 @@
   --status-purple: #8b5fd6;
   --status-green: #2ea86f;
 
+  /* Brand primary, also used outside the app shell (loaders, auth) */
+  --accent: #ea4b2c;
+
   color-scheme: light;
 }
 
@@ -51,50 +54,60 @@ body,
   height: 100%;
 }
 
+/* Smooth scrolling for anchor links (#workflow, #roles…) and scrollTo calls */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: var(--ink-soft);
-  background-color: var(--paper-50);
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(30, 140, 102, 0.1), transparent 55%),
-    linear-gradient(rgba(30, 140, 102, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 140, 102, 0.07) 1px, transparent 1px),
-    linear-gradient(160deg, var(--paper-50) 0%, var(--paper-100) 60%, #e9edf3 100%);
-  background-size:
-    100% 100%,
-    48px 48px,
-    48px 48px,
-    100% 100%;
-  background-attachment: fixed;
+  font-family: 'Onest', 'Inter', system-ui, -apple-system, sans-serif;
+  color: #4a4440;
+  background: #f3f1ee;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: relative;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: 'Inter Tight', 'Inter', sans-serif;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-  margin: 0;
+/* In a layer so Tailwind utilities (e.g. text-white) can override */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Inter Tight', 'Inter', sans-serif;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
 }
 
+/* Hairline scrollbars. Chrome/Edge ignore ::-webkit-scrollbar sizing whenever the
+   standard scrollbar-width is set (they fall back to a ~10px native bar), so the
+   standard properties are scoped to Firefox only. 1px is the thinnest that renders. */
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(24, 20, 18, 0.4) transparent;
+  }
+}
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 1px;
+  height: 1px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 25, 42, 0.15);
-  border-radius: 8px;
+  background: rgba(24, 20, 18, 0.4);
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 25, 42, 0.25);
+  background: rgba(24, 20, 18, 0.45);
 }
 
 .glass {
@@ -137,10 +150,229 @@ h4 {
   outline-offset: 2px;
 }
 
-.blob {
-  position: fixed;
-  border-radius: 9999px;
-  filter: blur(90px);
-  pointer-events: none;
-  z-index: -1;
+
+/* ── App shell theme (dashboard area) ─────────────────────────────
+   Warm canvas, dark sidebar, solid white cards, red/yellow accents.
+   The legacy --emerald-* tokens are remapped here so every page inside
+   the dashboard picks up the new accent without touching landing/login. */
+.app-shell {
+  --canvas: #f3f1ee;
+  --card: #ffffff;
+  --card-border: rgba(24, 20, 18, 0.05);
+  --panel-dark: #1d1a18;
+  --panel-dark-2: #2a2522;
+  --accent: #ea4b2c;
+  --accent-deep: #c8321a;
+  --accent-soft: #fde6df;
+  --sun: #f4c534;
+  --sun-soft: #fdf3cf;
+  --cell: #e8e6e3;
+
+  --ink: #181412;
+  --ink-soft: #4a4440;
+  --emerald-300: #f08a70;
+  --emerald-400: #ee6446;
+  --emerald-500: #ea4b2c;
+  --emerald-600: #c8321a;
+  --teal-400: #f4c534;
+  --gold-400: #f6d35f;
+  --gold-500: #f4c534;
+  --gold-600: #d9a915;
+  --glass-border: rgba(24, 20, 18, 0.08);
+
+  font-family: 'Onest', 'Inter', system-ui, sans-serif;
+  background: var(--canvas);
+  color: var(--ink-soft);
+}
+
+@layer base {
+  .app-shell :is(h1, h2, h3, h4) {
+    font-family: 'Onest', 'Inter', sans-serif;
+    letter-spacing: -0.015em;
+  }
+}
+
+.app-shell .glass,
+.app-shell .glass-strong {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(24, 20, 18, 0.03);
+}
+
+.app-shell .rounded-3xl {
+  border-radius: 1.75rem;
+}
+
+.panel-dark {
+  background: linear-gradient(180deg, var(--panel-dark) 0%, #241f1c 60%, #3a1d16 100%);
+  color: #f3eeea;
+}
+
+.cta-card {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255, 160, 90, 0.55), transparent 55%),
+    linear-gradient(150deg, #f0502e 0%, #d8321a 55%, #a8210f 100%);
+}
+
+/* ── Marketing pages (home, login) ── */
+.dot-noise {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+.cta-pill {
+  background: linear-gradient(90deg, #ffc2ad 0%, #f47a5a 55%, #ea4b2c 100%);
+}
+
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.22);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 32s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
+
+/* ── Toasts ── */
+/* Toasts rise from the bottom edge and sink back down when dismissed */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(110%) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(110%) scale(0.96); }
+}
+@keyframes count-tick {
+  from { opacity: 0; transform: translateY(-45%) scale(0.7); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast-enter { animation: toast-in 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.1) forwards; }
+.toast-leave { animation: toast-out 0.28s ease-in forwards; }
+.count-tick { animation: count-tick 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter, .toast-leave { animation-duration: 0.01ms; }
+}
+
+/* ── Modal ── */
+@keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modal-pop-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes modal-pop-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(16px) scale(0.98); }
+}
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.modal-fade-in { animation: modal-fade-in 0.25s ease-out both; }
+.modal-fade-out { animation: modal-fade-out 0.22s ease-in both; }
+.modal-pop-in { animation: modal-pop-in 0.38s cubic-bezier(0.2, 0.9, 0.25, 1.05) both; }
+.modal-pop-out { animation: modal-pop-out 0.22s ease-in both; }
+.step-in { animation: step-in 0.3s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-fade-in, .modal-fade-out, .modal-pop-in, .modal-pop-out, .step-in { animation-duration: 0.01ms; }
+}
+
+/* ── Shared form + chip styles (dashboard pages) ── */
+@layer components {
+  .field {
+    width: 100%;
+    border-radius: 1rem;
+    border: 1px solid transparent;
+    background: var(--canvas, #f3f1ee);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--ink, #181412);
+    outline: none;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  .field::placeholder { color: #9a938d; }
+  .field:focus { border-color: var(--ink, #181412); background: #fff; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    border-radius: 9999px;
+    border: 1px solid rgba(24, 20, 18, 0.1);
+    background: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--ink, #181412);
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .chip:hover { border-color: rgba(24, 20, 18, 0.3); }
+  .chip[aria-pressed='true'] { background: var(--ink, #181412); border-color: var(--ink, #181412); color: #fff; }
+}
+
+.app-shell {
+  --status-draft: #8a817a;
+  --status-amber: #c98a0c;
+  --status-blue: #2f6fd6;
+  --status-red: #d63a1f;
+  --status-purple: #8b5fd6;
+  --status-green: #1e8c66;
+}
+
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.drawer-in { animation: drawer-in 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+
+@supports (-moz-appearance: none) {
+  .scroll-dark { scrollbar-color: rgba(255, 255, 255, 0.4) transparent; }
+}
+.scroll-dark::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.4); }
+
+/* ── Notifications panel ── */
+@keyframes panel-in { from { transform: translateX(105%); } to { transform: translateX(0); } }
+@keyframes panel-out { from { transform: translateX(0); } to { transform: translateX(105%); } }
+.panel-in { animation: panel-in 0.4s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+.panel-out { animation: panel-out 0.24s ease-in both; }
+.notif-row { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.26s ease, opacity 0.2s ease, transform 0.26s ease; }
+.notif-row > * { min-height: 0; overflow: hidden; }
+.notif-leave { grid-template-rows: 0fr; opacity: 0; transform: translateX(24px); }
+@media (prefers-reduced-motion: reduce) {
+  .panel-in, .panel-out { animation-duration: 0.01ms; }
+  .notif-row { transition: none; }
+}
+
+
+/* Line charts: crisp strokes that draw in left to right */
+.chart-draw .recharts-line-curve {
+  shape-rendering: geometricPrecision;
+  /* pathLength=1 on the curve makes these fractions of the line's own length */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chart-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: inherit;
+}
+@keyframes chart-draw {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-draw .recharts-line-curve { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Hero arrow draws itself in after the headline lands */
+.arrow-draw path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chart-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.7s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrow-draw path { animation: none; stroke-dashoffset: 0; }
 }

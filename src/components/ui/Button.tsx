@@ -3,29 +3,27 @@ import clsx from 'clsx'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
-  variant?: 'primary' | 'ghost' | 'danger' | 'outline'
+  variant?: 'primary' | 'accent' | 'ghost' | 'danger' | 'outline'
   loading?: boolean
 }
 
-export function Button({ children, variant = 'primary', loading, className, disabled, ...rest }: ButtonProps) {
+export function Button({ children, variant = 'primary', loading, className, disabled, type = 'button', ...rest }: ButtonProps) {
   return (
     <button
+      type={type}
       className={clsx(
-        'focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed',
-        variant === 'primary' &&
-          'bg-gradient-to-b from-[var(--emerald-400)] to-[var(--emerald-600)] text-white shadow-[0_4px_16px_rgba(30,140,102,0.3)] hover:brightness-105',
-        variant === 'outline' &&
-          'border border-[var(--glass-border)] text-[var(--ink-soft)] hover:bg-black/[0.03]',
-        variant === 'ghost' && 'text-[var(--ink-soft)] hover:bg-black/[0.03]',
-        variant === 'danger' && 'bg-[var(--status-red)]/90 text-white hover:brightness-105',
+        'focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50',
+        variant === 'primary' && 'bg-[var(--ink)] text-white hover:bg-black',
+        variant === 'accent' && 'cta-pill text-[var(--ink)]',
+        variant === 'outline' && 'border border-black/15 bg-white text-[var(--ink)] hover:border-black/40',
+        variant === 'ghost' && 'text-[var(--ink)] hover:bg-black/[0.05]',
+        variant === 'danger' && 'bg-[var(--accent)] text-white hover:brightness-105',
         className,
       )}
       disabled={disabled || loading}
       {...rest}
     >
-      {loading && (
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      )}
+      {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
       {children}
     </button>
   )

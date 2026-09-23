@@ -8,10 +8,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ref.current) return
+    // New page starts at the top (instant, so it doesn't fight the fade-in)
+    window.scrollTo({ top: 0, behavior: 'instant' })
     gsap.fromTo(
       ref.current,
       { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' },
+      // clearProps: a leftover transform keeps the page on a composited layer, which blurs SVG/text
+      { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', clearProps: 'transform,opacity' },
     )
   }, [location.pathname])
 

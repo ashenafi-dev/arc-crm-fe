@@ -1,16 +1,19 @@
 import { STATUS_COLORS, STATUS_LABELS, LABOR_STATUS_LABELS, type RequestStatus, type LaborStatus } from '@/types'
 
-export function StatusBadge({ status }: { status: RequestStatus }) {
-  const color = STATUS_COLORS[status]
+function Badge({ color, label }: { color: string; label: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-      style={{ background: `${color}1a`, color, border: `1px solid ${color}40` }}
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
+      style={{ background: `color-mix(in srgb, ${color} 13%, white)`, color }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
-      {STATUS_LABELS[status]}
+      {label}
     </span>
   )
+}
+
+export function StatusBadge({ status }: { status: RequestStatus }) {
+  return <Badge color={STATUS_COLORS[status]} label={STATUS_LABELS[status]} />
 }
 
 const LABOR_COLORS: Record<LaborStatus, string> = {
@@ -23,14 +26,5 @@ const LABOR_COLORS: Record<LaborStatus, string> = {
 }
 
 export function LaborStatusBadge({ status }: { status: LaborStatus }) {
-  const color = LABOR_COLORS[status]
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-      style={{ background: `${color}1a`, color, border: `1px solid ${color}40` }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
-      {LABOR_STATUS_LABELS[status]}
-    </span>
-  )
+  return <Badge color={LABOR_COLORS[status]} label={LABOR_STATUS_LABELS[status]} />
 }
