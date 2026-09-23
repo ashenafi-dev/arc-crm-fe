@@ -1,5 +1,9 @@
 # React + TypeScript + Vite
 
+## Demo data
+
+For a full year of presentation-ready purchase, approval, labor, vendor, project, notification, and audit data, follow [the showcase data guide](docs/SHOWCASE_DATA_GUIDE.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
-import { FolderKanban, MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
-import { Button, useConfirm } from '@/components/ui'
-import { Field, FormModal, Toggle } from '@/components/admin/FormModal'
+import { FolderKanban, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/components/ui'
+import { ProjectFormModal } from '@/components/admin/ProjectFormModal'
+import { PROJECT_CREATED_EVENT } from '@/constants'
 import { notify } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { Project, RequestStatus } from '@/types'
@@ -21,23 +22,27 @@ export function ProjectsTab() {
   const [spend, setSpend] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [showArchived, setShowArchived] = useState(false)
-  // undefined = closed, null = new project
-  const [editing, setEditing] = useState<Project | null | undefined>(undefined)
+  const [editing, setEditing] = useState<Project | null>(null)
 
-  useEffect(() => {
-    Promise.all([
+  async function load() {
+    const [p, r] = await Promise.all([
       supabase.from('projects').select('*').order('name'),
       supabase.from('purchase_requests').select('project_id, status, approved_amount, actual_amount, estimated_amount').in('status', SPENT),
-    ]).then(([p, r]) => {
-      if (p.error) notify.error('Could not load projects')
-      const totals: Record<string, number> = {}
-      for (const row of (r.data ?? []) as SpendRow[]) {
-        totals[row.project_id] = (totals[row.project_id] ?? 0) + Number(row.actual_amount ?? row.approved_amount ?? row.estimated_amount ?? 0)
-      }
-      setProjects((p.data as Project[]) ?? [])
-      setSpend(totals)
-      setLoading(false)
-    })
+    ])
+    if (p.error) notify.error('Could not load projects')
+    const totals: Record<string, number> = {}
+    for (const row of (r.data ?? []) as SpendRow[]) {
+      totals[row.project_id] = (totals[row.project_id] ?? 0) + Number(row.actual_amount ?? row.approved_amount ?? row.estimated_amount ?? 0)
+    }
+    setProjects((p.data as Project[]) ?? [])
+    setSpend(totals)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    load()
+    window.addEventListener(PROJECT_CREATED_EVENT, load)
+    return () => window.removeEventListener(PROJECT_CREATED_EVENT, load)
   }, [])
 
   function upsert(p: Project) {
@@ -67,7 +72,7 @@ export function ProjectsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
           <button className="chip focus-ring" aria-pressed={!showArchived} onClick={() => setShowArchived(false)}>
             Active <span className="text-xs opacity-60">{projects.length - archived}</span>
@@ -76,10 +81,6 @@ export function ProjectsTab() {
             All <span className="text-xs opacity-60">{projects.length}</span>
           </button>
         </div>
-        <Button onClick={() => setEditing(null)}>
-          <Plus size={16} />
-          Add project
-        </Button>
       </div>
 
       {loading ? (
@@ -161,87 +162,7 @@ export function ProjectsTab() {
         </ListCard>
       )}
 
-      {editing !== undefined && <ProjectModal project={editing} onClose={() => setEditing(undefined)} onSaved={upsert} />}
+      {editing && <ProjectFormModal project={editing} onClose={() => setEditing(null)} onSaved={upsert} />}
     </div>
-  )
-}
-
-function ProjectModal({ project, onClose, onSaved }: { project: Project | null; onClose: () => void; onSaved: (p: Project) => void }) {
-  const [name, setName] = useState(project?.name ?? '')
-  const [code, setCode] = useState(project?.code ?? '')
-  const [client, setClient] = useState(project?.client_name ?? '')
-  const [location, setLocation] = useState(project?.location ?? '')
-  const [budget, setBudget] = useState(project?.budget != null ? String(project.budget) : '')
-  const [active, setActive] = useState(project?.is_active ?? true)
-  const [touched, setTouched] = useState(false)
-
-  const budgetNum = budget.trim() ? Number(budget) : null
-  const errors = {
-    name: touched && !name.trim() ? 'Required' : null,
-    code: touched && !code.trim() ? 'Required' : null,
-    budget: touched && budgetNum != null && (Number.isNaN(budgetNum) || budgetNum < 0) ? 'Enter a positive number' : null,
-  }
-
-  async function submit() {
-    setTouched(true)
-    if (!name.trim() || !code.trim() || (budgetNum != null && (Number.isNaN(budgetNum) || budgetNum < 0))) return false
-    const row = {
-      name: name.trim(),
-      code: code.trim().toUpperCase(),
-      client_name: client.trim() || null,
-      location: location.trim() || null,
-      budget: budgetNum,
-      is_active: active,
-    }
-    const query = project ? supabase.from('projects').update(row).eq('id', project.id) : supabase.from('projects').insert(row)
-    const { data, error } = await query.select().single()
-    if (error || !data) {
-      notify.error(error?.code === '23505' ? 'That project code is already used' : `Could not save project: ${error?.message ?? 'no permission'}`)
-      return false
-    }
-    notify.success(project ? 'Project details saved' : 'Project created and ready for requests')
-    onSaved(data as Project)
-    return true
-  }
-
-  return (
-    <FormModal
-      title={project ? 'Edit project' : 'New project'}
-      description="Requests are raised against a project and tracked against its budget."
-      icon={FolderKanban}
-      submitLabel={project ? 'Save changes' : 'Create project'}
-      onSubmit={submit}
-      onClose={onClose}
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
-        <Field label="Project name" htmlFor="pr-name" error={errors.name}>
-          <input id="pr-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Riverside Office Renovation" className={errors.name ? 'field !border-[var(--accent)]' : 'field'} />
-        </Field>
-        <Field label="Code" htmlFor="pr-code" error={errors.code}>
-          <input id="pr-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="RVS-01" className={errors.code ? 'field uppercase !border-[var(--accent)]' : 'field uppercase'} />
-        </Field>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Client" htmlFor="pr-client" hint="Optional">
-          <input id="pr-client" value={client} onChange={(e) => setClient(e.target.value)} placeholder="Client name" className="field" />
-        </Field>
-        <Field label="Location" htmlFor="pr-location" hint="Optional">
-          <input id="pr-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Site address or city" className="field" />
-        </Field>
-      </div>
-      <Field label="Budget ($)" htmlFor="pr-budget" hint="Optional" error={errors.budget}>
-        <input
-          id="pr-budget"
-          type="number"
-          min={0}
-          inputMode="decimal"
-          value={budget}
-          onChange={(e) => setBudget(e.target.value)}
-          placeholder="250000"
-          className={errors.budget ? 'field !border-[var(--accent)]' : 'field'}
-        />
-      </Field>
-      <Toggle checked={active} onChange={setActive} label="Active project" description="Archived projects are hidden from new requests" />
-    </FormModal>
   )
 }

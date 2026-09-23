@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
-import { Building2, Pencil, Plus, Trash2 } from 'lucide-react'
-import { Button, useConfirm } from '@/components/ui'
-import { Field, FormModal, Toggle } from '@/components/admin/FormModal'
+import { Building2, Pencil, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/components/ui'
+import { DepartmentFormModal } from '@/components/admin/DepartmentFormModal'
+import { DEPARTMENT_CREATED_EVENT } from '@/constants'
 import { notify } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { Department } from '@/types'
@@ -15,20 +16,24 @@ export function DepartmentsTab() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [members, setMembers] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
-  // undefined = closed, null = new department
-  const [editing, setEditing] = useState<Department | null | undefined>(undefined)
+  const [editing, setEditing] = useState<Department | null>(null)
+
+  async function load() {
+    const [d, p] = await Promise.all([supabase.from('departments').select('*').order('name'), supabase.from('profiles').select('department')])
+    if (d.error) notify.error('Could not load departments')
+    const counts: Record<string, number> = {}
+    for (const row of (p.data ?? []) as { department: string | null }[]) {
+      if (row.department) counts[row.department] = (counts[row.department] ?? 0) + 1
+    }
+    setDepartments((d.data as Department[]) ?? [])
+    setMembers(counts)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    Promise.all([supabase.from('departments').select('*').order('name'), supabase.from('profiles').select('department')]).then(([d, p]) => {
-      if (d.error) notify.error('Could not load departments')
-      const counts: Record<string, number> = {}
-      for (const row of (p.data ?? []) as { department: string | null }[]) {
-        if (row.department) counts[row.department] = (counts[row.department] ?? 0) + 1
-      }
-      setDepartments((d.data as Department[]) ?? [])
-      setMembers(counts)
-      setLoading(false)
-    })
+    load()
+    window.addEventListener(DEPARTMENT_CREATED_EVENT, load)
+    return () => window.removeEventListener(DEPARTMENT_CREATED_EVENT, load)
   }, [])
 
   function upsert(d: Department) {
@@ -58,14 +63,10 @@ export function DepartmentsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <p className="px-1 text-sm text-[var(--ink-soft)]">
           {departments.filter((d) => d.is_active).length} active of {departments.length}
         </p>
-        <Button onClick={() => setEditing(null)}>
-          <Plus size={16} />
-          Add department
-        </Button>
       </div>
 
       {loading ? (
@@ -112,51 +113,7 @@ export function DepartmentsTab() {
         </ListCard>
       )}
 
-      {editing !== undefined && <DepartmentModal department={editing} onClose={() => setEditing(undefined)} onSaved={upsert} />}
+      {editing && <DepartmentFormModal department={editing} onClose={() => setEditing(null)} onSaved={upsert} />}
     </div>
-  )
-}
-
-function DepartmentModal({ department, onClose, onSaved }: { department: Department | null; onClose: () => void; onSaved: (d: Department) => void }) {
-  const [name, setName] = useState(department?.name ?? '')
-  const [active, setActive] = useState(department?.is_active ?? true)
-  const [touched, setTouched] = useState(false)
-  const nameError = touched && !name.trim() ? 'Required' : null
-  const renamed = !!department && name.trim() !== department.name
-
-  async function submit() {
-    setTouched(true)
-    if (!name.trim()) return false
-    const row = { name: name.trim(), is_active: active }
-    const query = department ? supabase.from('departments').update(row).eq('id', department.id) : supabase.from('departments').insert(row)
-    const { data, error } = await query.select().single()
-    if (error || !data) {
-      notify.error(error?.code === '23505' ? 'A department with that name exists' : `Could not save department: ${error?.message ?? 'no permission'}`)
-      return false
-    }
-    notify.success(department ? 'Department saved' : 'Department added')
-    onSaved(data as Department)
-    return true
-  }
-
-  return (
-    <FormModal
-      title={department ? 'Edit department' : 'New department'}
-      description="People and purchase requests are grouped by department."
-      icon={Building2}
-      submitLabel={department ? 'Save changes' : 'Add department'}
-      onSubmit={submit}
-      onClose={onClose}
-    >
-      <Field label="Name" htmlFor="d-name" error={nameError}>
-        <input id="d-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Architecture" className={nameError ? 'field !border-[var(--accent)]' : 'field'} />
-      </Field>
-      {renamed && (
-        <p className="rounded-2xl bg-[var(--sun-soft)] px-4 py-3 text-xs leading-relaxed text-[var(--ink)]">
-          People and past requests keep the old name. Move people over from the Users tab.
-        </p>
-      )}
-      <Toggle checked={active} onChange={setActive} label="Active department" description="Archived departments can't be picked for people" />
-    </FormModal>
   )
 }

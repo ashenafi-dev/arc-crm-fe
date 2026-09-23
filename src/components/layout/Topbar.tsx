@@ -1,15 +1,26 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Bell, HardHat, Menu, Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Bell, Building2, FolderKanban, HardHat, Menu, Plus, Search, SlidersHorizontal, Store } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { NEW_LABOR_SEARCH, NEW_REQUEST_SEARCH } from '@/constants'
+import { NEW_DEPARTMENT_SEARCH, NEW_LABOR_SEARCH, NEW_PROJECT_SEARCH, NEW_REQUEST_SEARCH, NEW_VENDOR_SEARCH } from '@/constants'
 import { useNotifications } from '@/hooks/useNotifications'
 import { notify } from '@/lib/notify'
+import { VENDOR_MANAGER_ROLES } from '@/services'
+import type { Role } from '@/types'
 import { NotificationsPanel } from './NotificationsPanel'
 
-// The create button follows the page: labor pages create labor, everything else a purchase request
-function createActionFor(pathname: string) {
+// The create button follows the page; restricted actions also respect the signed-in role.
+function createActionFor(pathname: string, role: Role) {
   if (pathname.startsWith('/labor')) return { search: NEW_LABOR_SEARCH, label: 'Request labor', aria: 'New labor request', icon: HardHat }
+  if (pathname.startsWith('/vendors') && VENDOR_MANAGER_ROLES.includes(role)) {
+    return { search: NEW_VENDOR_SEARCH, label: 'Add vendor', aria: 'Add vendor', icon: Store }
+  }
+  if (pathname === '/admin/projects' && (role === 'admin' || role === 'owner')) {
+    return { search: NEW_PROJECT_SEARCH, label: 'Add project', aria: 'Add project', icon: FolderKanban }
+  }
+  if (pathname === '/admin/departments' && (role === 'admin' || role === 'owner')) {
+    return { search: NEW_DEPARTMENT_SEARCH, label: 'Add department', aria: 'Add department', icon: Building2 }
+  }
   return { search: NEW_REQUEST_SEARCH, label: 'New request', aria: 'New purchase request', icon: Plus }
 }
 
@@ -24,7 +35,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
     if (!notifOpen) notify.info(n.title)
   })
   if (!profile) return null
-  const create = createActionFor(pathname)
+  const create = createActionFor(pathname, profile.role)
 
   function handleSearch(e: FormEvent) {
     e.preventDefault()

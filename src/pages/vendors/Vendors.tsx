@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Mail, MapPin, Pencil, Phone, Plus, Store, User } from 'lucide-react'
 import clsx from 'clsx'
-import { Avatar, Button, PageHeader } from '@/components/ui'
+import { Avatar, PageHeader } from '@/components/ui'
 import { VendorFormModal } from '@/components/admin/VendorFormModal'
 import { useAuth } from '@/context/AuthContext'
+import { NEW_VENDOR_SEARCH, VENDOR_CREATED_EVENT } from '@/constants'
 import { getInitials } from '@/utils'
 import { fetchVendors, VENDOR_MANAGER_ROLES } from '@/services'
 import type { Vendor } from '@/types'
@@ -14,15 +15,19 @@ export function Vendors() {
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
   const [service, setService] = useState<string | null>(null)
-  // undefined = closed, null = new vendor
-  const [editing, setEditing] = useState<Vendor | null | undefined>(undefined)
+  const [editing, setEditing] = useState<Vendor | null>(null)
   const canManage = !!profile && VENDOR_MANAGER_ROLES.includes(profile.role)
 
+  async function load() {
+    const v = await fetchVendors()
+    setVendors(v)
+    setLoading(false)
+  }
+
   useEffect(() => {
-    fetchVendors().then((v) => {
-      setVendors(v)
-      setLoading(false)
-    })
+    load()
+    window.addEventListener(VENDOR_CREATED_EVENT, load)
+    return () => window.removeEventListener(VENDOR_CREATED_EVENT, load)
   }, [])
 
   function handleSaved(v: Vendor) {
@@ -42,14 +47,6 @@ export function Vendors() {
         title="Vendors"
         count={filtered.length}
         subtitle="Suppliers and contractors you can quote from"
-        actions={
-          canManage && (
-            <Button onClick={() => setEditing(null)}>
-              <Plus size={16} />
-              Add vendor
-            </Button>
-          )
-        }
       />
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -73,10 +70,10 @@ export function Vendors() {
           </span>
           <p className="text-lg font-bold text-[var(--ink)]">No vendors found</p>
           {canManage && (
-            <Button variant="outline" onClick={() => setEditing(null)}>
+            <Link to={{ search: NEW_VENDOR_SEARCH }} className="focus-ring inline-flex h-11 items-center gap-2 rounded-full border border-black/15 px-5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--canvas)]">
               <Plus size={16} />
               Add the first vendor
-            </Button>
+            </Link>
           )}
         </div>
       )}
@@ -145,7 +142,7 @@ export function Vendors() {
         ))}
       </div>
 
-      {editing !== undefined && <VendorFormModal vendor={editing} onClose={() => setEditing(undefined)} onSaved={handleSaved} />}
+      {editing && <VendorFormModal vendor={editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
     </div>
   )
 }
