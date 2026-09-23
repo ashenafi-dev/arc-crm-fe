@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
-import { ArrowRight, ChevronRight, History, LayoutGrid, LogOut, ShoppingCart, Truck, Users, X } from 'lucide-react'
+import { ArrowRight, ChevronRight, History, LayoutGrid, LogOut, Settings2, ShoppingCart, Truck, Users, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { Avatar } from '@/components/ui'
@@ -14,6 +14,7 @@ const NAV = [
   { to: '/labor', label: 'Labor Requests', icon: Users, roles: null },
   { to: '/vendors', label: 'Vendors', icon: Truck, roles: ['admin', 'owner', 'finance'] },
   { to: '/audit', label: 'Audit Log', icon: History, roles: ['admin', 'owner'] },
+  { to: '/admin', label: 'Admin', icon: Settings2, roles: ['admin', 'owner'] },
 ]
 
 // What each role gets nudged about in the sidebar card
@@ -135,12 +136,19 @@ function SidebarPanel({ onClose }: { onClose?: () => void }) {
 
         {/* Fixed: profile + sign out */}
         <div className="shrink-0 p-3">
-          <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] px-2.5 py-2">
-            <Avatar initials={profile.avatar_initials} size={34} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-white">{profile.full_name}</p>
-              <p className="truncate text-xs text-white/45">{ROLE_LABELS[profile.role]}</p>
-            </div>
+          <div className="flex items-center gap-1 rounded-2xl bg-white/[0.07] py-2 pr-2.5 pl-1">
+            <Link
+              to="/account"
+              onClick={onClose}
+              title="Your account"
+              className="focus-ring flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 py-0.5 transition-colors hover:bg-white/[0.06]"
+            >
+              <Avatar initials={profile.avatar_initials} size={34} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-white">{profile.full_name}</p>
+                <p className="truncate text-xs text-white/45">{ROLE_LABELS[profile.role]}</p>
+              </div>
+            </Link>
             <button
               onClick={async () => {
                 navigate('/', { replace: true })

@@ -3,10 +3,15 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { differenceInCalendarDays, format, isSameDay, startOfDay, subDays } from 'date-fns'
-import { CalendarDays, ChevronDown, HardHat, MapPin, MoreVertical } from 'lucide-react'
+import { CalendarDays, Clock, HardHat, MapPin, MoreVertical } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { Avatar } from '@/components/ui'
+import { KpiCards } from '@/components/dashboard/KpiCards'
+import { SpendCharts } from '@/components/dashboard/SpendCharts'
+import { Pill } from '@/components/dashboard/kit'
+import { COLORS, DONE, IN_REVIEW, isOverdue, money } from '@/components/dashboard/metrics'
+import { formatDuration } from '@/services/labor'
 import {
   LABOR_STATUS_LABELS,
   ROLE_LABELS,
@@ -24,9 +29,6 @@ const AWAITING_BY_ROLE: Record<string, RequestStatus | null> = {
   owner: 'awaiting_owner',
   admin: null,
 }
-
-const IN_REVIEW: RequestStatus[] = ['awaiting_finance', 'awaiting_gm', 'awaiting_owner']
-const DONE: RequestStatus[] = ['approved', 'purchased', 'completed']
 
 const PIPELINE: { title: string; statuses: RequestStatus[] }[] = [
   { title: 'New', statuses: ['draft', 'quote_received'] },
@@ -51,7 +53,6 @@ const PROGRESS: Record<RequestStatus, number> = {
 const HEAT_HOURS = [8, 10, 12, 14, 16, 18]
 const HEAT_DAYS = 12
 
-const COLORS = { ink: '#181412', sun: '#f4c534', accent: '#ea4b2c' }
 const SERIES = [
   { key: 'approved', name: 'Approved', color: COLORS.accent },
   { key: 'review', name: 'In review', color: COLORS.sun },
@@ -66,14 +67,6 @@ function dueLabel(date: string | null) {
   if (diff === 0) return 'Due today'
   if (diff === 1) return 'Due tomorrow'
   return `Due ${format(new Date(date), 'MMM d')}`
-}
-
-function isOverdue(r: PurchaseRequest) {
-  return !!r.required_date && differenceInCalendarDays(new Date(r.required_date), new Date()) < 0 && !DONE.includes(r.status)
-}
-
-function money(n: number) {
-  return `$${Math.round(n).toLocaleString()}`
 }
 
 export function Dashboard() {
@@ -146,6 +139,8 @@ export function Dashboard() {
 
   return (
     <div className="space-y-4">
+      <KpiCards profile={profile} requests={requests} scoped={scoped} labor={labor} loading={loading} />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-[1.1fr_1.25fr_0.9fr]">
         {/* Request volume */}
         <section className="rounded-[1.75rem] bg-white p-6">
@@ -297,6 +292,8 @@ export function Dashboard() {
         })}
       </div>
 
+      <SpendCharts scoped={scoped} loading={loading} companyWide={profile.role !== 'employee'} />
+
       {activeLabor.length > 0 && (
         <section>
           <div className="mb-3 flex items-center justify-between px-1">
@@ -310,7 +307,7 @@ export function Dashboard() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {activeLabor.slice(0, 4).map((l) => (
-              <div key={l.id} className="rounded-[1.5rem] bg-white p-5">
+              <Link key={l.id} to={`/labor/${l.id}`} className="focus-ring block rounded-[1.5rem] bg-white p-5 transition-transform hover:-translate-y-0.5">
                 <div className="flex items-center justify-between">
                   <Tag tone="sun">{LABOR_STATUS_LABELS[l.status]}</Tag>
                   <span className="text-xs text-slate-400">{l.request_number}</span>
@@ -319,8 +316,11 @@ export function Dashboard() {
                 <div className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
                   <p className="flex items-center gap-2"><HardHat size={15} /> {l.workers_required} workers</p>
                   <p className="flex items-center gap-2 truncate"><MapPin size={15} /> {l.location}</p>
+                  {formatDuration(l.expected_duration_hours) && (
+                    <p className="flex items-center gap-2"><Clock size={15} /> {formatDuration(l.expected_duration_hours)}</p>
+                  )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -390,15 +390,6 @@ function Tag({ tone, children }: { tone: 'ink' | 'sun' | 'accent'; children: Rea
       )}
     >
       {children}
-    </span>
-  )
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 px-3 py-1.5 text-xs text-[var(--ink)]">
-      {children}
-      <ChevronDown size={14} />
     </span>
   )
 }

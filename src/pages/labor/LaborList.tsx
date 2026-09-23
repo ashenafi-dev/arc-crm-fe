@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, HardHat, MapPin, Plus, UserCheck, Users } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, CalendarDays, Clock, HardHat, MapPin, Plus, UserCheck, Users } from 'lucide-react'
 import { notify } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { Button, LaborStatusBadge, PageHeader } from '@/components/ui'
+import { Button, LaborStatusBadge, PageHeader, useConfirm } from '@/components/ui'
 import { LABOR_CREATED_EVENT, NEW_LABOR_SEARCH } from '@/constants'
+import { formatDuration, isLaborManager, NEXT_LABOR_STATUS as NEXT, updateLaborRequest } from '@/services/labor'
 import { LABOR_STATUS_LABELS, type LaborRequest, type LaborStatus } from '@/types'
-
-const NEXT: Partial<Record<LaborStatus, LaborStatus>> = {
-  requested: 'reviewed',
-  reviewed: 'assigned',
-  assigned: 'in_progress',
-  in_progress: 'completed',
-}
 
 const FILTERS: { key: string; label: string; statuses: LaborStatus[] | null }[] = [
   { key: 'active', label: 'Active', statuses: ['requested', 'reviewed', 'assigned', 'in_progress'] },
@@ -31,9 +25,9 @@ function AssigneeField({ labor, onSaved }: { labor: LaborRequest; onSaved: () =>
 
   async function save() {
     setBusy(true)
-    const { error } = await supabase.from('labor_requests').update({ assigned_to: value || null }).eq('id', labor.id)
+    const { error } = await updateLaborRequest(labor.id, { assigned_to: value.trim() || null })
     setBusy(false)
-    if (error) notify.error(`Could not update the crew lead: ${error.message}`)
+    if (error) notify.error(`Could not update the crew lead: ${error}`)
     else {
       notify.success('Crew lead saved on this labor request')
       onSaved()
@@ -57,6 +51,8 @@ export function LaborList() {
   const [labor, setLabor] = useState<LaborRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [filterKey, setFilterKey] = useState('active')
+  const navigate = useNavigate()
+  const confirm = useConfirm()
 
   async function load() {
     const { data } = await supabase.from('labor_requests').select('*, project:projects(*)').order('created_at', { ascending: false })
@@ -74,15 +70,22 @@ export function LaborList() {
   async function advance(l: LaborRequest) {
     const next = NEXT[l.status]
     if (!next) return
-    const { error } = await supabase.from('labor_requests').update({ status: next }).eq('id', l.id)
-    if (error) notify.error(`Could not move this request: ${error.message}`)
+    const ok = await confirm({
+      title: `Move to ${LABOR_STATUS_LABELS[next].toLowerCase()}?`,
+      body: `${l.request_number} · ${l.labor_type} at ${l.location}. The requester is notified.`,
+      confirmLabel: `Move to ${LABOR_STATUS_LABELS[next].toLowerCase()}`,
+      tone: 'accent',
+    })
+    if (!ok) return
+    const { error } = await updateLaborRequest(l.id, { status: next })
+    if (error) notify.error(`Could not move this request: ${error}`)
     else {
       notify.success(`Labor request moved to ${LABOR_STATUS_LABELS[next].toLowerCase()}`)
       load()
     }
   }
 
-  const canAdvance = profile?.role === 'admin' || profile?.role === 'general_manager' || profile?.role === 'owner'
+  const canAdvance = isLaborManager(profile?.role)
   const filter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0]
   const filtered = labor.filter((l) => !filter.statuses || filter.statuses.includes(l.status))
   const workers = filtered.reduce((sum, l) => sum + Number(l.workers_required ?? 0), 0)
@@ -124,13 +127,17 @@ export function LaborList() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((l) => (
-          <article key={l.id} className="flex flex-col rounded-[1.5rem] bg-white">
-            <div className="flex-1 p-5">
+          <article
+            key={l.id}
+            className="group flex cursor-pointer flex-col rounded-[1.5rem] bg-white transition-transform hover:-translate-y-0.5"
+            onClick={() => navigate(`/labor/${l.id}`)}
+          >
+            <Link to={`/labor/${l.id}`} className="focus-ring block flex-1 rounded-[1.5rem] p-5" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between gap-2">
                 <LaborStatusBadge status={l.status} />
                 <span className="text-xs text-slate-400">{l.request_number}</span>
               </div>
-              <p className="mt-3 text-xl font-bold text-[var(--ink)]">{l.labor_type}</p>
+              <p className="mt-3 text-xl font-bold text-[var(--ink)] group-hover:text-[var(--accent)]">{l.labor_type}</p>
               <p className="text-sm text-slate-500">{l.project?.name}</p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-[var(--ink)]">
                 <span className="flex items-center gap-2 rounded-xl bg-[var(--canvas)] px-3 py-2">
@@ -142,19 +149,28 @@ export function LaborList() {
                   <span className="truncate">{l.location}</span>
                 </span>
               </div>
-              <p className="mt-3 flex items-center gap-2 text-sm text-[var(--ink-soft)]">
-                <CalendarDays size={15} className="shrink-0" />
-                {format(new Date(l.required_at), 'EEE, MMM d · h:mm a')}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--ink-soft)]">
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={15} className="shrink-0" />
+                  {format(new Date(l.required_at), 'EEE, MMM d · h:mm a')}
+                </span>
+                {formatDuration(l.expected_duration_hours) && (
+                  <span className="flex items-center gap-2">
+                    <Clock size={15} className="shrink-0" />
+                    {formatDuration(l.expected_duration_hours)}
+                  </span>
+                )}
+              </div>
               {l.assigned_to && !canAdvance && (
                 <p className="mt-2 flex items-center gap-2 text-sm font-medium text-[var(--ink)]">
                   <UserCheck size={15} className="text-[#1e8c66]" />
                   {l.assigned_to}
                 </p>
               )}
-            </div>
+            </Link>
             {canAdvance && (
-              <div className="space-y-2 border-t border-black/[0.06] p-4">
+              // Inline manager controls: keep clicks here from opening the detail page
+              <div className="cursor-default space-y-2 border-t border-black/[0.06] p-4" onClick={(e) => e.stopPropagation()}>
                 <AssigneeField labor={l} onSaved={load} />
                 {NEXT[l.status] && (
                   <Button variant="outline" className="w-full" onClick={() => advance(l)}>

@@ -4,11 +4,14 @@ import { differenceInCalendarDays, format } from 'date-fns'
 import { ChevronRight, Inbox, Search, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { EDITABLE_STATUSES } from '@/lib/workflow'
+import { PURCHASE_SAVED_EVENT } from '@/services/requests'
 import { Avatar, PageHeader, StatusBadge } from '@/components/ui'
 import type { PurchaseRequest, RequestStatus } from '@/types'
 
 const FILTERS: { key: string; label: string; statuses: RequestStatus[] | null }[] = [
   { key: 'all', label: 'All', statuses: null },
+  { key: 'drafts', label: 'Drafts', statuses: ['draft', 'quote_received'] },
   { key: 'review', label: 'In review', statuses: ['awaiting_finance', 'awaiting_gm', 'awaiting_owner'] },
   { key: 'awaiting_finance', label: 'Finance', statuses: ['awaiting_finance'] },
   { key: 'awaiting_gm', label: 'GM', statuses: ['awaiting_gm'] },
@@ -52,9 +55,18 @@ export function RequestList() {
       setLoading(false)
     }
     load()
+    // Reload when a request is created or edited from the modal over this page
+    window.addEventListener(PURCHASE_SAVED_EVENT, load)
+    return () => window.removeEventListener(PURCHASE_SAVED_EVENT, load)
   }, [])
 
-  const scoped = requests.filter((r) => profile?.role !== 'employee' || r.requester_id === profile.id)
+  // Employees see only their own requests; drafts stay private to their requester (and admins)
+  const scoped = requests.filter((r) => {
+    const mine = r.requester_id === profile?.id
+    if (profile?.role === 'employee') return mine
+    if (EDITABLE_STATUSES.includes(r.status)) return mine || profile?.role === 'admin'
+    return true
+  })
   const filter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0]
   const q = search.toLowerCase()
   const filtered = scoped.filter(

@@ -29,15 +29,22 @@ interface StepModalProps {
   summary: ReactNode
   onClose: () => void
   children: ReactNode
+  /** Optional outline button beside submit on the last step (e.g. "Save as draft") */
+  secondaryAction?: { label: string; onClick: (close: () => void) => void; disabled?: boolean }
+  /** Disables only the last-step submit button (e.g. a precondition is missing) */
+  submitDisabled?: boolean
+  /** Question shown before discarding unsaved input */
+  discardPrompt?: string
 }
 
 // Shared shell for multi-step create flows: dark side panel with steps and a
 // live summary, progress bar, discard confirmation, bottom sheet on mobile.
-export function StepModal({ title, icon: Icon, steps, step, onNext, onBack, onGoTo, onSubmit, submitLabel, busy, dirty, summary, onClose, children }: StepModalProps) {
+export function StepModal({ title, icon: Icon, steps, step, onNext, onBack, onGoTo, onSubmit, submitLabel, busy, dirty, summary, onClose, children, secondaryAction, submitDisabled, discardPrompt = 'Discard this request?' }: StepModalProps) {
   const [closing, setClosing] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const isLast = step === steps.length - 1
+  const showSecondary = isLast && !!secondaryAction
 
   function close() {
     setClosing(true)
@@ -162,10 +169,10 @@ export function StepModal({ title, icon: Icon, steps, step, onNext, onBack, onGo
             </div>
           </div>
 
-          <footer className="flex items-center justify-between gap-3 border-t border-black/[0.06] px-6 py-4 sm:px-8">
+          <footer className={clsx('flex items-center justify-between gap-3 border-t border-black/[0.06] px-6 py-4 sm:px-8', showSecondary && 'flex-wrap sm:flex-nowrap')}>
             {confirmDiscard ? (
               <div className="flex w-full flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-medium text-[var(--ink)]">Discard this request?</p>
+                <p className="text-sm font-medium text-[var(--ink)]">{discardPrompt}</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -195,19 +202,32 @@ export function StepModal({ title, icon: Icon, steps, step, onNext, onBack, onGo
                     </>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => (isLast ? onSubmit(close) : onNext())}
-                  disabled={busy}
-                  className={clsx(
-                    'focus-ring inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-60',
-                    isLast ? 'cta-pill text-[var(--ink)]' : 'bg-[var(--ink)] text-white',
+                <div className={clsx('flex min-w-0 items-center gap-2', showSecondary && 'w-full sm:w-auto')}>
+                  {showSecondary && (
+                    <button
+                      type="button"
+                      onClick={() => secondaryAction?.onClick(close)}
+                      disabled={busy || secondaryAction?.disabled}
+                      className="focus-ring inline-flex h-12 flex-1 items-center justify-center rounded-full border border-black/15 px-5 text-sm font-medium whitespace-nowrap text-[var(--ink)] transition-colors hover:bg-[var(--canvas)] disabled:opacity-50 sm:flex-none"
+                    >
+                      {secondaryAction?.label}
+                    </button>
                   )}
-                >
-                  {busy && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
-                  {isLast ? submitLabel : 'Continue'}
-                  {!busy && <ArrowRight size={16} />}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => (isLast ? onSubmit(close) : onNext())}
+                    disabled={busy || (isLast && submitDisabled)}
+                    className={clsx(
+                      'focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-60',
+                      isLast ? 'cta-pill text-[var(--ink)]' : 'bg-[var(--ink)] text-white',
+                      showSecondary && 'flex-1 px-5 sm:flex-none sm:px-7',
+                    )}
+                  >
+                    {busy && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                    {isLast ? submitLabel : 'Continue'}
+                    {!busy && <ArrowRight size={16} className="shrink-0" />}
+                  </button>
+                </div>
               </>
             )}
           </footer>

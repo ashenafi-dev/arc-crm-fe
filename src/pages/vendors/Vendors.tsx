@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react'
-import { Mail, Phone, Store, User } from 'lucide-react'
-import { Avatar, PageHeader } from '@/components/ui'
+import { Link } from 'react-router-dom'
+import { ArrowUpRight, Mail, MapPin, Pencil, Phone, Plus, Store, User } from 'lucide-react'
+import clsx from 'clsx'
+import { Avatar, Button, PageHeader } from '@/components/ui'
+import { VendorFormModal } from '@/components/admin/VendorFormModal'
+import { useAuth } from '@/context/AuthContext'
 import { getInitials } from '@/utils'
-import { fetchVendors } from '@/services'
+import { fetchVendors, VENDOR_MANAGER_ROLES } from '@/services'
 import type { Vendor } from '@/types'
 
 export function Vendors() {
+  const { profile } = useAuth()
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
   const [service, setService] = useState<string | null>(null)
+  // undefined = closed, null = new vendor
+  const [editing, setEditing] = useState<Vendor | null | undefined>(undefined)
+  const canManage = !!profile && VENDOR_MANAGER_ROLES.includes(profile.role)
 
   useEffect(() => {
     fetchVendors().then((v) => {
@@ -16,6 +24,13 @@ export function Vendors() {
       setLoading(false)
     })
   }, [])
+
+  function handleSaved(v: Vendor) {
+    setVendors((list) => {
+      const next = list.some((i) => i.id === v.id) ? list.map((i) => (i.id === v.id ? v : i)) : [...list, v]
+      return next.sort((a, b) => a.name.localeCompare(b.name))
+    })
+  }
 
   const servicesOf = (v: Vendor) => (v.services ?? '').split(/,\s*/).filter(Boolean)
   const allServices = [...new Set(vendors.flatMap(servicesOf))].sort()
@@ -27,6 +42,14 @@ export function Vendors() {
         title="Vendors"
         count={filtered.length}
         subtitle="Suppliers and contractors you can quote from"
+        actions={
+          canManage && (
+            <Button onClick={() => setEditing(null)}>
+              <Plus size={16} />
+              Add vendor
+            </Button>
+          )
+        }
       />
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -49,19 +72,45 @@ export function Vendors() {
             <Store size={24} />
           </span>
           <p className="text-lg font-bold text-[var(--ink)]">No vendors found</p>
+          {canManage && (
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              <Plus size={16} />
+              Add the first vendor
+            </Button>
+          )}
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((v, i) => (
-          <article key={v.id} className="flex flex-col rounded-[1.5rem] bg-white p-5">
+          <article
+            key={v.id}
+            className={clsx('group relative flex flex-col rounded-[1.5rem] bg-white p-5 transition-shadow hover:shadow-[0_18px_50px_-30px_rgba(24,20,18,0.45)]', v.is_active === false && 'opacity-70')}
+          >
             <div className="flex items-center gap-3">
               <Avatar initials={getInitials(v.name)} index={i} size={46} />
-              <p className="min-w-0 flex-1 text-lg leading-tight font-bold text-[var(--ink)]">{v.name}</p>
+              <div className="min-w-0 flex-1">
+                {/* Stretched link: the whole card opens the vendor */}
+                <Link to={`/vendors/${v.id}`} className="focus-ring rounded-md text-lg leading-tight font-bold text-[var(--ink)] after:absolute after:inset-0 after:rounded-[1.5rem]">
+                  {v.name}
+                </Link>
+                {v.is_active === false && <p className="mt-0.5 text-xs font-medium text-slate-500">Inactive</p>}
+              </div>
+              {canManage ? (
+                <button
+                  onClick={() => setEditing(v)}
+                  aria-label={`Edit ${v.name}`}
+                  className="focus-ring relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 text-[var(--ink)] hover:bg-[var(--canvas)]"
+                >
+                  <Pencil size={15} />
+                </button>
+              ) : (
+                <ArrowUpRight size={18} className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              )}
             </div>
             {v.services && (
               <div className="mt-4 mb-4 flex flex-wrap gap-1.5">
-                {v.services.split(/,\s*/).filter(Boolean).map((s) => (
+                {servicesOf(v).map((s) => (
                   <span key={s} className="rounded-full bg-[var(--canvas)] px-2.5 py-1 text-xs text-[var(--ink)]">{s}</span>
                 ))}
               </div>
@@ -74,21 +123,29 @@ export function Vendors() {
                 </p>
               )}
               {v.phone && (
-                <a href={`tel:${v.phone}`} className="flex items-center gap-2.5 text-[var(--ink-soft)] hover:text-[var(--accent)]">
+                <a href={`tel:${v.phone}`} className="relative z-10 flex w-fit items-center gap-2.5 text-[var(--ink-soft)] hover:text-[var(--accent)]">
                   <Phone size={15} className="shrink-0 text-slate-400" />
                   {v.phone}
                 </a>
               )}
               {v.email && (
-                <a href={`mailto:${v.email}`} className="flex min-w-0 items-center gap-2.5 text-[var(--ink-soft)] hover:text-[var(--accent)]">
+                <a href={`mailto:${v.email}`} className="relative z-10 flex w-fit max-w-full min-w-0 items-center gap-2.5 text-[var(--ink-soft)] hover:text-[var(--accent)]">
                   <Mail size={15} className="shrink-0 text-slate-400" />
                   <span className="truncate">{v.email}</span>
                 </a>
+              )}
+              {v.address && (
+                <p className="flex min-w-0 items-center gap-2.5 text-[var(--ink-soft)]">
+                  <MapPin size={15} className="shrink-0 text-slate-400" />
+                  <span className="truncate">{v.address}</span>
+                </p>
               )}
             </div>
           </article>
         ))}
       </div>
+
+      {editing !== undefined && <VendorFormModal vendor={editing} onClose={() => setEditing(undefined)} onSaved={handleSaved} />}
     </div>
   )
 }

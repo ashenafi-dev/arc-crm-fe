@@ -28,7 +28,16 @@ export interface Project {
   name: string
   code: string
   client_name: string | null
+  location?: string | null
+  budget?: number | null
   is_active: boolean
+}
+
+export interface Department {
+  id: string
+  name: string
+  is_active: boolean
+  created_at?: string
 }
 
 export interface Vendor {
@@ -38,12 +47,16 @@ export interface Vendor {
   phone: string | null
   email: string | null
   services: string | null
+  address?: string | null
+  is_active?: boolean
+  created_at?: string
 }
 
 export interface PurchaseItem {
   id: string
   purchase_request_id: string
   name: string
+  description?: string | null
   quantity: number
   unit: string
   estimated_unit_price: number | null
@@ -56,6 +69,7 @@ export interface VendorQuotation {
   vendor?: Vendor
   amount: number
   notes: string | null
+  valid_until?: string | null
   is_selected: boolean
   created_at: string
 }
@@ -80,6 +94,7 @@ export interface PurchaseAttachment {
   file_path: string
   file_url: string
   file_name: string
+  file_size?: number | null
   description: string | null
   uploaded_by: string | null
   uploaded_by_profile?: Profile
@@ -103,6 +118,9 @@ export interface PurchaseRequest {
   justification: string
   status: RequestStatus
   rejection_reason: string | null
+  /** Set when an approver sends the request back for changes */
+  return_note?: string | null
+  submitted_at?: string | null
   created_at: string
   updated_at: string
   items?: PurchaseItem[]
@@ -127,7 +145,10 @@ export interface LaborRequest {
   description: string
   status: LaborStatus
   assigned_to: string | null
+  expected_duration_hours?: number | null
+  management_notes?: string | null
   created_at: string
+  updated_at?: string
 }
 
 export interface AuditEvent {
@@ -138,6 +159,20 @@ export interface AuditEvent {
   entity_type: string
   entity_id: string
   description: string
+  metadata?: Record<string, unknown>
+  created_at: string
+}
+
+export type NotificationKind = 'review' | 'approved' | 'rejected' | 'returned' | 'purchased' | 'labor' | 'reminder' | 'comment' | 'system'
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  kind: NotificationKind
+  title: string
+  body: string
+  link: string
+  is_read: boolean
   created_at: string
 }
 

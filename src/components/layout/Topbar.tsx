@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, HardHat, Menu, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { NEW_LABOR_SEARCH, NEW_REQUEST_SEARCH } from '@/constants'
-import { MOCK_NOTIFICATIONS } from '@/constants/notifications'
+import { useNotifications } from '@/hooks/useNotifications'
+import { notify } from '@/lib/notify'
 import { NotificationsPanel } from './NotificationsPanel'
 
 // The create button follows the page: labor pages create labor, everything else a purchase request
@@ -17,10 +18,12 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [query, setQuery] = useState('')
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS)
   const [notifOpen, setNotifOpen] = useState(false)
+  // A quiet heads-up when something new lands while the panel is closed
+  const { items, unread, markRead, markAllRead, dismiss } = useNotifications(profile?.id, (n) => {
+    if (!notifOpen) notify.info(n.title)
+  })
   if (!profile) return null
-  const unread = notifications.filter((n) => !n.read).length
   const create = createActionFor(pathname)
 
   function handleSearch(e: FormEvent) {
@@ -62,7 +65,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <Bell size={20} strokeWidth={1.75} />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white ring-2 ring-[var(--canvas)]">
-            {unread}
+            {unread > 99 ? '99+' : unread}
           </span>
         )}
       </button>
@@ -75,7 +78,15 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <create.icon size={18} />
         <span className="hidden sm:inline">{create.label}</span>
       </Link>
-      {notifOpen && <NotificationsPanel items={notifications} onChange={setNotifications} onClose={() => setNotifOpen(false)} />}
+      {notifOpen && (
+        <NotificationsPanel
+          items={items}
+          onMarkRead={markRead}
+          onMarkAllRead={markAllRead}
+          onDismiss={dismiss}
+          onClose={() => setNotifOpen(false)}
+        />
+      )}
     </header>
   )
 }

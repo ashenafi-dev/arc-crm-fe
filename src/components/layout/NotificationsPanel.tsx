@@ -1,15 +1,18 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { formatDistanceToNowStrict, isToday } from 'date-fns'
-import { BellOff, Check, CheckCheck, ClipboardCheck, HardHat, MessageSquare, Sparkles, X, XCircle, type LucideIcon } from 'lucide-react'
-import type { AppNotification, NotificationKind } from '@/constants/notifications'
+import { AlarmClock, BellOff, Check, CheckCheck, ClipboardCheck, HardHat, MessageSquare, ShoppingBag, Sparkles, Undo2, X, XCircle, type LucideIcon } from 'lucide-react'
+import type { AppNotification, NotificationKind } from '@/types'
 
 const KINDS: Record<NotificationKind, { icon: LucideIcon; bg: string; fg: string }> = {
   review: { icon: ClipboardCheck, bg: 'var(--sun)', fg: 'var(--ink)' },
   approved: { icon: Check, bg: '#d3efdf', fg: '#1e8c66' },
   rejected: { icon: XCircle, bg: 'var(--accent-soft)', fg: 'var(--accent)' },
+  returned: { icon: Undo2, bg: 'var(--sun-soft)', fg: 'var(--ink)' },
+  purchased: { icon: ShoppingBag, bg: '#e6e1da', fg: 'var(--ink)' },
+  reminder: { icon: AlarmClock, bg: 'var(--accent)', fg: '#fff' },
   comment: { icon: MessageSquare, bg: '#e6e1da', fg: 'var(--ink)' },
   labor: { icon: HardHat, bg: 'var(--ink)', fg: '#fff' },
   system: { icon: Sparkles, bg: 'var(--canvas)', fg: 'var(--ink)' },
@@ -20,11 +23,13 @@ const LEAVE_MS = 260
 
 interface Props {
   items: AppNotification[]
-  onChange: Dispatch<SetStateAction<AppNotification[]>>
+  onMarkRead: (id: string) => void
+  onMarkAllRead: () => void
+  onDismiss: (ids: string[]) => void
   onClose: () => void
 }
 
-export function NotificationsPanel({ items, onChange, onClose }: Props) {
+export function NotificationsPanel({ items, onMarkRead, onMarkAllRead, onDismiss, onClose }: Props) {
   const navigate = useNavigate()
   const [closing, setClosing] = useState(false)
   const [tab, setTab] = useState<'all' | 'unread'>('all')
@@ -53,19 +58,19 @@ export function NotificationsPanel({ items, onChange, onClose }: Props) {
   function dismiss(ids: string[]) {
     setLeaving((s) => new Set([...s, ...ids]))
     window.setTimeout(() => {
-      onChange((list) => list.filter((n) => !ids.includes(n.id)))
+      onDismiss(ids)
       setLeaving((s) => new Set([...s].filter((id) => !ids.includes(id))))
     }, LEAVE_MS)
   }
 
   function open(n: AppNotification) {
-    onChange((list) => list.map((i) => (i.id === n.id ? { ...i, read: true } : i)))
-    navigate(n.link)
+    if (!n.is_read) onMarkRead(n.id)
+    navigate(n.link || '/dashboard')
     close()
   }
 
-  const unread = items.filter((n) => !n.read).length
-  const visible = tab === 'unread' ? items.filter((n) => !n.read) : items
+  const unread = items.filter((n) => !n.is_read).length
+  const visible = tab === 'unread' ? items.filter((n) => !n.is_read) : items
   const groups = [
     { label: 'Today', list: visible.filter((n) => isToday(new Date(n.created_at))) },
     { label: 'Earlier', list: visible.filter((n) => !isToday(new Date(n.created_at))) },
@@ -112,7 +117,7 @@ export function NotificationsPanel({ items, onChange, onClose }: Props) {
               </button>
             </div>
             <button
-              onClick={() => onChange((list) => list.map((n) => ({ ...n, read: true })))}
+              onClick={onMarkAllRead}
               disabled={unread === 0}
               className="focus-ring inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:bg-[var(--canvas)] disabled:opacity-40"
             >
@@ -139,13 +144,13 @@ export function NotificationsPanel({ items, onChange, onClose }: Props) {
               <p className="px-3 pt-2 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">{g.label}</p>
               <ul className="space-y-1">
                 {g.list.map((n) => {
-                  const k = KINDS[n.kind]
+                  const k = KINDS[n.kind] ?? KINDS.system
                   return (
                     <li key={n.id} className={clsx('notif-row', leaving.has(n.id) && 'notif-leave')}>
                       <div
                         className={clsx(
                           'group relative flex gap-3 rounded-2xl p-3 transition-colors',
-                          n.read ? 'hover:bg-[var(--canvas)]' : 'bg-[var(--canvas)]/70 hover:bg-[var(--canvas)]',
+                          n.is_read ? 'hover:bg-[var(--canvas)]' : 'bg-[var(--canvas)]/70 hover:bg-[var(--canvas)]',
                         )}
                       >
                         <button onClick={() => open(n)} className="focus-ring absolute inset-0 rounded-2xl" aria-label={`Open: ${n.title}`} />
@@ -153,11 +158,11 @@ export function NotificationsPanel({ items, onChange, onClose }: Props) {
                           <k.icon size={18} strokeWidth={2.25} />
                         </span>
                         <div className="pointer-events-none relative min-w-0 flex-1 pr-6">
-                          <p className={clsx('text-sm leading-snug text-[var(--ink)]', n.read ? 'font-medium' : 'font-bold')}>{n.title}</p>
+                          <p className={clsx('text-sm leading-snug text-[var(--ink)]', n.is_read ? 'font-medium' : 'font-bold')}>{n.title}</p>
                           <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-[var(--ink-soft)]">{n.body}</p>
                           <p className="mt-1.5 text-[11px] text-slate-400">{formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: true })}</p>
                         </div>
-                        {!n.read && <span className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-[var(--accent)] transition-opacity group-hover:opacity-0" />}
+                        {!n.is_read && <span className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-[var(--accent)] transition-opacity group-hover:opacity-0" />}
                         <button
                           onClick={() => dismiss([n.id])}
                           aria-label="Dismiss notification"
@@ -177,7 +182,7 @@ export function NotificationsPanel({ items, onChange, onClose }: Props) {
         {/* Footer */}
         {items.length > 0 && (
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-black/[0.06] px-6 py-4">
-            <p className="text-xs text-slate-400">Showing mock activity for now</p>
+            <p className="text-xs text-slate-400">Updates arrive live</p>
             <button
               onClick={() => dismiss(visible.map((n) => n.id))}
               className="focus-ring rounded-full px-4 py-2 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)]"

@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { format } from 'date-fns'
-import { ArrowRight, Building2, CalendarDays, HardHat, MapPin, Minus, Plus } from 'lucide-react'
+import { ArrowRight, Building2, CalendarDays, Clock, HardHat, MapPin, Minus, Plus } from 'lucide-react'
 import { notify } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { ReviewTile, StepField as Field, StepModal, type Step } from '@/components/ui/StepModal'
 import { LABOR_CREATED_EVENT } from '@/constants'
+import { DURATION_PRESETS, formatDuration } from '@/services/labor'
 import type { Project } from '@/types'
 
 const STEPS: Step[] = [
@@ -17,7 +18,7 @@ const STEPS: Step[] = [
 
 const QUICK_TYPES = ['General laborers', 'Electricians', 'Plumbers', 'Carpenters', 'Masons', 'Welders']
 
-const EMPTY_FORM = { project_id: '', labor_type: '', workers_required: 1, location: '', description: '', required_at: '' }
+const EMPTY_FORM = { project_id: '', labor_type: '', workers_required: 1, location: '', description: '', required_at: '', expected_duration_hours: '' }
 
 export function LaborRequestModal({ onClose }: { onClose: () => void }) {
   const { profile } = useAuth()
@@ -34,6 +35,9 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
   function update<K extends keyof typeof EMPTY_FORM>(key: K, value: (typeof EMPTY_FORM)[K]) {
     setForm((f) => ({ ...f, [key]: value }))
   }
+
+  const hours = Number(form.expected_duration_hours) > 0 ? Number(form.expected_duration_hours) : null
+  const duration = formatDuration(hours)
 
   const stepErrors: Record<number, string | null> = {
     0: !form.project_id ? 'Choose which project needs this crew' : !form.labor_type.trim() ? 'Pick or type the trade you need' : null,
@@ -68,8 +72,8 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
   async function submit(close: () => void) {
     if (!profile) return
     setBusy(true)
+    // request_number comes from the database default (LR-YYYY-0001)
     const { error } = await supabase.from('labor_requests').insert({
-      request_number: `LR-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       project_id: form.project_id,
       requested_by: profile.id,
       labor_type: form.labor_type.trim(),
@@ -77,6 +81,7 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
       location: form.location.trim(),
       description: form.description,
       required_at: new Date(form.required_at).toISOString(),
+      expected_duration_hours: hours,
     })
     setBusy(false)
     if (error) {
@@ -90,7 +95,9 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
 
   const project = projects.find((p) => p.id === form.project_id)
   const when = form.required_at ? format(new Date(form.required_at), 'EEE, MMM d · h:mm a') : null
-  const dirty = !!(form.project_id || form.labor_type || form.location || form.description || form.required_at) || form.workers_required !== 1
+  const dirty =
+    !!(form.project_id || form.labor_type || form.location || form.description || form.required_at || form.expected_duration_hours) ||
+    form.workers_required !== 1
 
   return (
     <StepModal
@@ -115,7 +122,12 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
               {form.workers_required} <span className="text-xs font-medium text-white/50">worker{form.workers_required === 1 ? '' : 's'}</span>
             </span>
           </div>
-          {when && <p className="text-xs text-white/50">{when}</p>}
+          {when && (
+            <p className="text-xs text-white/50">
+              {when}
+              {duration && ` · ${duration}`}
+            </p>
+          )}
           <div className="flex items-center gap-1.5 border-t border-white/10 pt-3 text-[11px] text-white/55">
             <span className="rounded-full bg-[var(--sun)] px-2 py-0.5 font-semibold text-[var(--ink)]">Review</span>
             <ArrowRight size={12} />
@@ -225,6 +237,38 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
             </div>
           </Field>
 
+          <Field label="Expected duration" optional>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {DURATION_PRESETS.map((d) => (
+                <button
+                  key={d.label}
+                  type="button"
+                  className="chip focus-ring !px-3.5 !py-1.5"
+                  aria-pressed={hours === d.hours}
+                  onClick={() => update('expected_duration_hours', hours === d.hours ? '' : String(d.hours))}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Clock size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="number"
+                min={0.5}
+                step={0.5}
+                inputMode="decimal"
+                placeholder="Or type the hours, e.g. 12"
+                value={form.expected_duration_hours}
+                onChange={(e) => update('expected_duration_hours', e.target.value)}
+                aria-label="Expected duration in hours"
+                className="field pr-16 pl-11"
+              />
+              <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm text-slate-400">hours</span>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-500">Working time: 1 day is 8 hours, 1 week is 40.</p>
+          </Field>
+
           <Field label="Notes for the crew" optional>
             <textarea
               rows={4}
@@ -253,9 +297,10 @@ export function LaborRequestModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <ReviewTile label="Location" value={form.location} onEdit={() => setStep(1)} />
             <ReviewTile label="Needed at" value={when ?? 'Not set'} onEdit={() => setStep(1)} />
+            <ReviewTile label="Expected duration" value={duration ? `${duration}${duration.endsWith('h') ? '' : ` (${hours}h)`}` : 'Not set'} onEdit={() => setStep(1)} />
           </div>
 
           <div className="flex items-center gap-3 rounded-[1.5rem] bg-[var(--sun-soft)] p-4 text-sm text-[var(--ink)]">

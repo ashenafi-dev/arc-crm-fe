@@ -10,10 +10,13 @@ export function DashboardLayout() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [navOpen, setNavOpen] = useState(false)
   const creating = searchParams.get('new')
+  // ?edit=<purchaseRequestId> reopens the create modal on a draft
+  const editing = searchParams.get('edit')
 
   function closeCreate() {
     const next = new URLSearchParams(searchParams)
     next.delete('new')
+    next.delete('edit')
     setSearchParams(next)
   }
 
@@ -28,7 +31,8 @@ export function DashboardLayout() {
           </PageTransition>
         </div>
       </div>
-      {creating === 'request' && <NewRequestModal onClose={closeCreate} />}
+      {creating === 'request' && !editing && <NewRequestModal onClose={closeCreate} />}
+      {editing && <NewRequestModal key={editing} editId={editing} onClose={closeCreate} />}
       {creating === 'labor' && <LaborRequestModal onClose={closeCreate} />}
     </div>
   )

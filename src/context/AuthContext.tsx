@@ -7,6 +7,8 @@ interface AuthState {
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Re-reads the signed-in profile after it was edited (name, role, department) */
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -45,13 +47,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null }
   }
 
+  async function refreshProfile() {
+    const { data } = await supabase.auth.getUser()
+    if (data.user) await loadProfile(data.user.id)
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setProfile(null)
   }
 
   return (
-    <AuthContext.Provider value={{ profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ profile, loading, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
