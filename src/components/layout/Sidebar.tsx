@@ -79,8 +79,9 @@ function SidebarPanel({ onClose }: { onClose?: () => void }) {
       <div className="panel-dark flex min-h-0 w-full flex-1 flex-col rounded-[1.75rem]">
         {/* Fixed: logo */}
         <div className="flex shrink-0 items-center gap-2.5 px-6 pt-6 pb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-lg font-bold text-white">A</div>
-          <p className="flex-1 text-lg font-bold tracking-tight text-white">Arch Ops</p>
+          <Link to="/dashboard" onClick={onClose} className="focus-ring flex-1 rounded-lg">
+            <img src="/brand/logo-light.png" alt="Arch Ops" className="h-6 w-auto" draggable={false} />
+          </Link>
           {onClose && (
             <button onClick={onClose} aria-label="Close menu" className="focus-ring rounded-full p-2 text-white/60 hover:bg-white/10 hover:text-white">
               <X size={18} />

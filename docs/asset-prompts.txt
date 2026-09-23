@@ -1,0 +1,381 @@
+================================================================================
+ ARCH OPS — IMAGE ASSET PROMPT PACK
+ Every image the site is waiting for, where it goes, why it is there, and a
+ copy-paste prompt for each one.
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+1. Generate each asset with the prompt in its section (Midjourney, DALL·E,
+   Firefly, Ideogram, Leonardo, etc.). Every prompt already includes the shared
+   style, colours and background rules, so each one can be pasted on its own.
+2. Remove the background if the tool didn't (remove.bg, Photoshop "Remove
+   Background", Figma, Canva). Every asset must be a transparent PNG.
+3. Save it with the exact file name below into the exact folder. The site
+   picks it up automatically and the dashed placeholder disappears. No code
+   changes are needed.
+4. Export at 2x size (the "Export" line in each asset gives the target) and
+   compress with TinyPNG or Squoosh so each file stays under ~400 KB.
+
+
+--------------------------------------------------------------------------------
+ ASSET LIST AT A GLANCE
+--------------------------------------------------------------------------------
+
+ #  File                                   Page / spot                      Sits on
+ -- -------------------------------------  -------------------------------  -------------------
+ 1  public/assets/3d/hero.png              Home: hero, tall right panel     Dark panel #1d1a18
+ 2  public/assets/3d/workflow.png          Home: "Three sign-offs" card     White card #ffffff
+ 3  public/assets/3d/cta.png               Home: "Ready to sign off?"       Dark panel #1d1a18
+ 4  public/assets/3d/login.png             Login: right panel               Dark panel #1d1a18
+ 5  public/assets/roles/employee.png       Home: Roles, card 1              Peach card #fde6df
+ 6  public/assets/roles/finance.png        Home: Roles, card 2              Yellow card #f4c534
+ 7  public/assets/roles/general_manager.png Home: Roles, card 3             Red card #ea4b2c
+ 8  public/assets/roles/owner.png          Home: Roles, card 4              Dark card #1d1a18
+ 9  public/assets/roles/admin.png          Home: Roles, card 5              Beige card #e6e1da
+
+
+--------------------------------------------------------------------------------
+ WHY THESE ASSETS EXIST (the short version)
+--------------------------------------------------------------------------------
+
+The site is a procurement and labor-approval system for an architecture firm:
+someone requests materials or a crew, Finance checks the budget, the General
+Manager confirms the need, the Owner gives final sign-off, and everything is
+logged. The 3D objects make that abstract flow feel physical: blueprints,
+materials, stamps, approval seals and a hard hat say "construction + paperwork
++ sign-off" at a glance. The role portraits put a real face on each person in
+the chain so visitors immediately see "this is for my team". Together they
+give the pages life and teach the domain without extra text.
+
+
+--------------------------------------------------------------------------------
+ SHARED LOOK (already inside every prompt; here for reference)
+--------------------------------------------------------------------------------
+
+Brand colours
+  Signal red   #EA4B2C  (primary; approvals, key accents)
+  Sun yellow   #F4C534  (highlights, "your turn", seals)
+  Ink black    #181412  (warm near-black)
+  Warm canvas  #F3F1EE  (off-white; paper, clay)
+  Soft beige   #E6E1DA
+
+3D objects: soft matte clay / premium toy render, rounded edges, subtle
+subsurface glow, gentle studio lighting from the upper left, soft contact
+shadow directly under the object only, slight 3/4 isometric view, clean
+Octane/Blender look. Materials: matte clay, satin plastic, a little brushed
+metal, paper and blueprint textures. No text, no logos, no clutter.
+
+People: real photographic portraits, not illustrations. Ethiopian men and
+women with authentic Ethiopian features, a range of ages and genders, each
+with a distinct and memorable face. Waist-up, three-quarter angle, looking
+slightly toward the left side of the frame, where the card text sits. Shallow
+depth of field, soft cinematic key light with warm rim light, real skin
+texture. Outfits are modern professional workwear that fits each job (safety vest,
+blazer, hard hat, lanyard), not traditional or cultural dress. Only the people
+are Ethiopian. Brand colours appear as small accents.
+Cleanly cut out, with the bottom edge cropped straight at the waist so they
+"stand" on the card's bottom edge.
+
+Global negative prompt (add wherever the tool supports it):
+  text, letters, words, watermark, logo, signature, UI, frame, border,
+  background scenery, floor, horizon, busy background, cartoon, anime,
+  low-poly, plastic doll skin, extra fingers, deformed hands, distorted
+  face, cross-eyed, blurry, oversharpened, harsh shadows, neon, cyberpunk,
+  cold blue tint
+
+
+================================================================================
+ 1) HERO — public/assets/3d/hero.png
+================================================================================
+Where:  Home page, first screen, tall dark panel on the right. It floats gently
+        up and down. An "APPROVED" outline word runs down the right edge, and a
+        small "PR-2026-014 approved" chip sits bottom-left over it.
+Why:    First impression. It should say "construction purchases, signed off"
+        in one glance and be the visual star of the page.
+Look:   A floating stack: rolled architectural blueprint + small stack of steel
+        I-beams/bricks + a big glossy red approval seal/stamp with a yellow
+        checkmark on top. Heroic, slightly tilted, lots of air around it.
+Frame:  Portrait 4:5. Keep the object centred, with the lower-left 20% fairly
+        empty (the chip overlays there).
+Export: 1600 x 2000 px, transparent PNG.
+
+COPY-PASTE PROMPT:
+3D render of a floating composition for an architecture firm's purchase-approval
+app: a rolled blueprint with a white linework pattern, a neat mini stack of
+matte steel I-beams and terracotta bricks, and on top a large glossy signal-red
+(#EA4B2C) rubber approval stamp with a bold sun-yellow (#F4C534) checkmark seal
+beside it, all gently tilted and levitating in a balanced vertical arrangement.
+Soft matte clay and satin plastic materials, rounded edges, subtle subsurface
+glow, warm near-black (#181412) and warm off-white (#F3F1EE) secondary tones,
+premium toy-like realism, soft studio key light from upper left, faint warm rim
+light, soft contact shadow only under the lowest object, 3/4 isometric view,
+Octane/Blender quality, sharp focus, generous empty space around the object,
+object centred with the lower-left area kept clear, isolated on a fully
+transparent background, PNG cut-out, no text, no logos, portrait 4:5.
+Negative: text, letters, watermark, logo, background scenery, floor, horizon,
+frame, cartoon, low-poly, harsh shadows, neon, cold blue tint.
+
+
+================================================================================
+ 2) WORKFLOW — public/assets/3d/workflow.png
+================================================================================
+Where:  Home page, "THE WORKFLOW / Three sign-offs. Zero chasing." white card,
+        under the heading (wide, about 256 px tall on screen).
+Why:    Explains the three-step approval chain (Finance, then GM, then Owner)
+        visually, sitting next to the 01 / 02 / 03 cards.
+Look:   Three rounded pedestals/steps rising left to right. A document on the
+        first, a yellow checkmark token on the second, a red approval seal on
+        the third, linked by a smooth ribbon path.
+Frame:  Wide landscape 16:9. Subject centred and spread horizontally.
+Export: 1920 x 1080 px, transparent PNG.
+
+COPY-PASTE PROMPT:
+3D render, wide composition: three soft rounded pedestals rising in steps from
+left to right like a staircase of approvals. On the first a crisp paper purchase
+request document with a paperclip, on the second a sun-yellow (#F4C534) round
+checkmark token, on the third a glossy signal-red (#EA4B2C) approval seal
+stamp. A smooth warm near-black (#181412) ribbon path flows between them showing
+the order of steps. Matte clay and satin plastic materials, rounded edges,
+subtle subsurface glow, off-white (#F3F1EE) and soft beige (#E6E1DA)
+pedestals, premium toy-like realism, soft studio light from upper left, soft
+contact shadows under each pedestal only, slight 3/4 isometric view,
+Octane/Blender quality, clean and minimal, isolated on a fully transparent
+background, PNG cut-out, works on a white card, no text, no numbers, no logos,
+landscape 16:9.
+Negative: text, numbers, letters, watermark, logo, background, floor plane,
+horizon, frame, cartoon, low-poly, harsh shadows, neon, cold blue tint.
+
+
+================================================================================
+ 3) CLOSING CTA — public/assets/3d/cta.png
+================================================================================
+Where:  Home page, last big dark section "Ready to sign off?", right half.
+        It floats gently.
+Why:    Sends the visitor off with a feeling of "done, approved, built". A
+        payoff image that ends the story.
+Look:   A small finished modern building model (architectural maquette) on a
+        rounded plinth, with a big yellow checkmark badge and a red ribbon
+        seal. Celebratory but classy.
+Frame:  Square 1:1, subject centred with breathing room.
+Export: 1600 x 1600 px, transparent PNG.
+
+COPY-PASTE PROMPT:
+3D render of a small, elegant modern architectural maquette: a minimalist
+three-storey building with warm off-white (#F3F1EE) walls, thin near-black
+(#181412) window frames and a terracotta accent, sitting on a soft rounded
+plinth. Beside it floats a large sun-yellow (#F4C534) circular badge with a bold
+checkmark and a glossy signal-red (#EA4B2C) ribbon approval seal, conveying
+"project approved and complete". Matte clay and satin materials, rounded edges,
+subtle subsurface glow, premium toy-like realism, soft studio key light from
+upper left with a warm rim light that reads well on a dark background, soft
+contact shadow under the plinth only, 3/4 isometric view, Octane/Blender
+quality, centred with breathing room, isolated on a fully transparent
+background, PNG cut-out, no text, no logos, square 1:1.
+Negative: text, letters, watermark, logo, background scenery, ground plane,
+horizon, frame, cartoon, low-poly, harsh shadows, neon, cold blue tint.
+
+
+================================================================================
+ 4) LOGIN — public/assets/3d/login.png
+================================================================================
+Where:  Login page, big dark panel on the right under "Every spend. Signed
+        off." (desktop only, tall area).
+Why:    Makes the sign-in page feel like the product, not a generic form. It
+        should say "secure access to your approvals".
+Look:   A chunky 3D padlock whose shackle is shaped like a hard hat or a
+        compass arc, with a red keycard/ID badge and a yellow checkmark token
+        floating beside it.
+Frame:  Portrait 4:5, centred.
+Export: 1600 x 2000 px, transparent PNG.
+
+COPY-PASTE PROMPT:
+3D render of a chunky friendly padlock for a construction-firm approvals app:
+the lock body in warm off-white (#F3F1EE) matte clay, the shackle shaped like
+the curve of a sun-yellow (#F4C534) construction hard hat, a signal-red
+(#EA4B2C) employee ID keycard with a simple chip floating at an angle in front,
+and a small round yellow checkmark token orbiting nearby. Rounded edges, matte
+clay and satin plastic, subtle subsurface glow, premium toy-like realism, soft
+studio key light from upper left and a warm rim light so it reads on a near-
+black background, soft contact shadow only under the lock, 3/4 isometric view,
+Octane/Blender quality, centred with air around it, isolated on a fully
+transparent background, PNG cut-out, no text, no logos, portrait 4:5.
+Negative: text, letters, watermark, logo, background, floor, horizon, frame,
+cartoon, low-poly, harsh shadows, neon, cold blue tint.
+
+
+================================================================================
+ ROLE PORTRAITS — shared rules for assets 5 to 9
+================================================================================
+Where:  Home page, "Built for everyone who touches a purchase." Five tall
+        cards side by side, each about 480 px tall. The role name and a short
+        description sit at the top; the person fills the bottom and bleeds
+        slightly up behind the text and out to the card edges.
+Why:    Puts a real, local face on each role so visitors instantly recognise
+        their own team, and shows who approves what.
+Frame:  Portrait 3:4. Waist-up, head in the upper-middle third, shoulders
+        wide, body cropped straight at the waist along the bottom edge. Body
+        turned three-quarters, face toward the LEFT of the frame (toward the
+        card text). Leave clear space above the head.
+Export: 1500 x 2000 px, transparent PNG. Clean hair edges (no halo), because
+        some cards are dark and some are light.
+Set:    Shoot all five with the same lens (85 mm), the same light direction
+        (key light from upper left, warm rim light from right) and the same
+        camera height so they look like one photo series.
+
+
+================================================================================
+ 5) EMPLOYEE — public/assets/roles/employee.png
+================================================================================
+Card:   Soft peach (#FDE6DF). "Raises requests, attaches quotes and tracks status."
+Person: Ethiopian woman, about 26. Bright, capable site architect / project
+        employee, a warm half-smile, natural short afro or neat braids.
+Outfit: Off-white shirt under a sun-yellow high-visibility safety vest,
+        holding a rolled blueprint tucked under one arm or a tablet.
+
+COPY-PASTE PROMPT:
+Photorealistic waist-up portrait of a young Ethiopian woman, about 26, junior
+architect and site employee, authentic Ethiopian facial features, warm brown
+skin with real texture, expressive eyes, confident warm half-smile, neat
+braids pulled back. She wears a crisp off-white work shirt under a sun-yellow
+(#F4C534) high-visibility safety vest, a rolled architectural blueprint tucked
+under one arm. Body turned three-quarters, face and gaze toward the left of the
+frame, head in the upper-middle third, cropped straight at the waist. 85 mm
+lens, shallow depth of field, soft cinematic key light from upper left, subtle
+warm rim light from the right, natural colour grade, high detail, real depth.
+Cleanly cut out with crisp hair edges, fully transparent background, PNG, no
+text, no logos, portrait 3:4.
+Negative: background, room, office, text, logo, watermark, cartoon, painting,
+plastic skin, beauty filter, extra fingers, deformed hands, distorted face,
+cold blue tint.
+
+
+================================================================================
+ 6) FINANCE — public/assets/roles/finance.png
+================================================================================
+Card:   Sun yellow (#F4C534). "Reviews pricing and budget. The first
+        checkpoint on every spend."
+Person: Ethiopian man, about 35. Sharp, analytical, trustworthy. Neatly
+        trimmed beard, calm focused look, slight knowing smile.
+Outfit: Near-black (#181412) blazer over a crisp white shirt, no tie. Slim
+        glasses optional, holding a thin folder or a calculator. The dark
+        blazer will pop on the yellow card.
+
+COPY-PASTE PROMPT:
+Photorealistic waist-up portrait of an Ethiopian man, about 35, finance officer
+at an architecture firm, authentic Ethiopian facial features, deep brown skin
+with real texture, neatly trimmed short beard, thin modern glasses, calm and
+focused expression with a slight knowing smile. He wears a tailored warm near-
+black (#181412) blazer over a crisp white open-collar shirt and holds a slim
+folder of invoices against his chest. Body turned three-quarters, face toward
+the left of the frame, head in the upper-middle third, cropped straight at the
+waist. 85 mm lens, shallow depth of field, soft cinematic key light from upper
+left, warm rim light from the right, natural colour grade, high detail, real
+depth. Cleanly cut out with crisp edges, fully transparent background, PNG, no
+text, no logos, portrait 3:4.
+Negative: background, office, text, logo, watermark, cartoon, painting,
+plastic skin, beauty filter, extra fingers, deformed hands, distorted face,
+cold blue tint.
+
+
+================================================================================
+ 7) GENERAL MANAGER — public/assets/roles/general_manager.png
+================================================================================
+Card:   Signal red (#EA4B2C). "Makes sure the work is justified before it
+        reaches final sign-off."
+Person: Ethiopian woman, about 45. Decisive, experienced, commanding but
+        approachable. Short natural grey-streaked hair or elegant wrapped
+        hair, strong cheekbones, direct confident gaze.
+Outfit: Site-ready manager look. Off-white (#F3F1EE) structured blazer over
+        a fitted light-grey top, a white construction hard hat held at her
+        hip and a clipboard or tablet. Light clothing reads well on the red
+        card.
+
+COPY-PASTE PROMPT:
+Photorealistic waist-up portrait of an Ethiopian woman, about 45, general
+manager of an architecture and construction firm, authentic Ethiopian facial
+features, strong cheekbones, rich brown skin with real texture, short natural
+hair with a few grey strands, direct confident gaze and a composed slight
+smile. She wears a structured warm off-white (#F3F1EE) blazer over a fitted light-grey
+top, holds a white construction hard hat at her hip, and has a slim tablet in
+the other hand, the confident look of a manager who walks the site. Body turned three-quarters,
+face toward the left of the frame, head in the upper-middle third, cropped
+straight at the waist. 85 mm lens, shallow depth of field, soft cinematic key
+light from upper left, warm rim light from the right, natural colour grade,
+high detail, real depth. Cleanly cut out with crisp hair edges, fully
+transparent background, PNG, no text, no logos, portrait 3:4.
+Negative: background, construction site, text, logo, watermark, cartoon,
+painting, plastic skin, beauty filter, extra fingers, deformed hands,
+distorted face, cold blue tint, traditional dress, cultural costume, scarf.
+
+
+================================================================================
+ 8) OWNER — public/assets/roles/owner.png
+================================================================================
+Card:   Dark (#1D1A18). "Gives final approval and sees spend across every
+        project."
+Person: Ethiopian man, about 60. The founder: dignified, wise, calm authority.
+        Short grey hair, grey beard, laugh lines, kind but decisive eyes.
+Outfit: Executive look. Camel wool suit jacket over an off-white open-collar
+        shirt, a small signal-red pocket square, and a luxury watch. Warm light
+        tones so he separates from the dark card; strong warm rim light is
+        essential.
+
+COPY-PASTE PROMPT:
+Photorealistic waist-up portrait of an Ethiopian man, about 60, founder and
+owner of an architecture firm, authentic Ethiopian facial features, short grey
+hair, well-kept grey beard, laugh lines and deep kind but decisive eyes,
+dignified calm expression. He wears a camel wool suit jacket over an off-white
+open-collar shirt, a signal-red (#EA4B2C) pocket square as a small accent and
+a classic leather-strap watch, the polished look of a firm's founder. Body turned
+three-quarters, face toward the left of the frame, head in the upper-middle
+third, cropped straight at the waist. 85 mm lens, shallow depth of field, soft
+cinematic key light from upper left, strong warm rim light from the right so he
+separates clearly from a near-black background, natural colour grade, high
+detail, real depth. Cleanly cut out with crisp edges, fully transparent
+background, PNG, no text, no logos, portrait 3:4.
+Negative: background, office, text, logo, watermark, cartoon, painting,
+plastic skin, beauty filter, extra fingers, deformed hands, distorted face,
+cold blue tint, dark clothing that blends into black, traditional dress,
+cultural costume, scarf.
+
+
+================================================================================
+ 9) ADMINISTRATOR — public/assets/roles/admin.png
+================================================================================
+Card:   Soft beige (#E6E1DA). "Runs users, projects, vendors and the rules the
+        workflow follows."
+Person: Ethiopian man, about 29. Organised systems person, friendly and
+        sharp. Short high-top or tapered cut, clean-shaven or light stubble,
+        easy genuine smile.
+Outfit: Near-black crew-neck knit or overshirt with a signal-red lanyard and ID
+        badge, a laptop held under one arm. The dark outfit gives contrast on
+        the beige card.
+
+COPY-PASTE PROMPT:
+Photorealistic waist-up portrait of an Ethiopian man, about 29, systems
+administrator at an architecture firm, authentic Ethiopian facial features,
+warm brown skin with real texture, short tapered haircut, light stubble,
+friendly and sharp expression with an easy genuine smile. He wears a warm
+near-black (#181412) crew-neck knit over a white T-shirt, a signal-red
+(#EA4B2C) lanyard with an ID badge, and holds a slim silver laptop under one
+arm. Body turned three-quarters, face toward the left of the frame, head in the
+upper-middle third, cropped straight at the waist. 85 mm lens, shallow depth of
+field, soft cinematic key light from upper left, warm rim light from the right,
+natural colour grade, high detail, real depth. Cleanly cut out with crisp
+edges, fully transparent background, PNG, no text, no logos, portrait 3:4.
+Negative: background, office, text, logo, watermark, cartoon, painting,
+plastic skin, beauty filter, extra fingers, deformed hands, distorted face,
+cold blue tint.
+
+
+--------------------------------------------------------------------------------
+ FINAL CHECKLIST BEFORE DROPPING FILES IN
+--------------------------------------------------------------------------------
+[ ] Transparent background (check on both a white and a black preview)
+[ ] Exact file name and folder from the table at the top
+[ ] No text, logos or watermarks anywhere in the image
+[ ] Portraits: face toward the left, cropped straight at the waist
+[ ] 3D objects: same light direction and material feel across all four
+[ ] Hands and faces look natural (regenerate if fingers or eyes look off)
+[ ] Compressed to roughly 400 KB or less per file

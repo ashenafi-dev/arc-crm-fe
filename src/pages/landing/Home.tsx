@@ -17,7 +17,7 @@ const STAGES = [
 
 // Role cards: drop cut-out PNGs (transparent background) into public/assets/roles/
 const ROLES: { role: Role; blurb: string; bg: string; fg: string }[] = [
-  { role: 'employee', blurb: 'Raises requests, attaches quotes and tracks status without chasing anyone.', bg: '#ffffff', fg: 'var(--ink)' },
+  { role: 'employee', blurb: 'Raises requests, attaches quotes and tracks status without chasing anyone.', bg: 'var(--accent-soft)', fg: 'var(--ink)' },
   { role: 'finance', blurb: 'Reviews pricing and budget. The first checkpoint on every spend.', bg: 'var(--sun)', fg: 'var(--ink)' },
   { role: 'general_manager', blurb: 'Makes sure the work is justified before it reaches final sign-off.', bg: 'var(--accent)', fg: '#ffffff' },
   { role: 'owner', blurb: 'Gives final approval and sees spend across every project.', bg: 'var(--panel-dark)', fg: '#ffffff' },
@@ -57,7 +57,7 @@ export function Home() {
         {/* ── Hero bento ── */}
         <section className="grid min-h-[calc(100svh-5.5rem)] grid-cols-1 gap-3 pb-3 lg:grid-cols-12 lg:grid-rows-[minmax(0,1fr)_minmax(15rem,auto)]">
           <div className="hero-cell relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-6 sm:p-10 lg:col-span-7">
-            <span className="w-fit rounded-full border border-black/10 px-4 py-1.5 text-xs font-medium tracking-wide text-[var(--ink)] uppercase">
+            <span className="w-fit rounded-full border-[1.5px] border-[var(--accent)] px-4 py-1.5 text-xs font-medium tracking-wide text-[var(--ink)] uppercase">
               Procurement & labor · Architecture firms
             </span>
 
@@ -197,7 +197,7 @@ export function Home() {
                 Three sign-offs. Zero chasing.
               </h2>
             </div>
-            <AssetSlot src="/assets/3d/workflow.png" label="Workflow 3D asset" className="mt-8 h-64 w-full" />
+            <AssetSlot src="/assets/3d/workflow.png" label="Workflow 3D asset" className="mt-6 h-72 w-full sm:h-80 lg:-mx-4 lg:w-[calc(100%+2rem)]" />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:col-span-7">
@@ -249,7 +249,7 @@ export function Home() {
                   {ROLE_LABELS[r.role]}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed opacity-80">{r.blurb}</p>
-                {/* Cut-out bleeds to the card edges and slightly up behind the text */}
+                {/* Cut-out is sized by height so the person fills the card, standing on its bottom edge */}
                 <div className="relative mt-5 min-h-0 flex-1">
                   <AssetSlot
                     src={`/assets/roles/${r.role}.png`}
@@ -257,7 +257,7 @@ export function Home() {
                     dark={r.fg === '#ffffff'}
                     className="absolute"
                     placeholderClassName="inset-0"
-                    imgClassName="-bottom-6 -left-6 h-[calc(100%+4rem)] w-[calc(100%+3rem)] object-bottom"
+                    imgClassName="-bottom-6 left-1/2 h-[calc(100%+3rem)] w-auto max-w-none -translate-x-1/2 object-bottom"
                   />
                 </div>
               </article>
@@ -309,12 +309,12 @@ export function Home() {
             </Link>
           </div>
           <div className="relative flex items-center justify-center p-6 sm:p-10">
-            <AssetSlot src="/assets/3d/cta.png" label="Closing 3D asset" dark className="float-slow h-80 w-full" />
+            <AssetSlot src="/assets/3d/cta.png" label="Closing 3D asset" dark className="float-slow h-80 w-full sm:h-[26rem]" />
           </div>
         </section>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 px-2 py-6 text-sm text-[var(--ink-soft)]">
-          <span className="font-extrabold tracking-tight text-[var(--ink)] uppercase">Arch Ops</span>
+          <img src="/brand/logo-dark.png" alt="Arch Ops" className="h-5 w-auto" draggable={false} />
           <a href="https://ethix.dev" target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--ink)] underline-offset-4 hover:text-[var(--accent)] hover:underline">
             Built by Ethix.dev
           </a>

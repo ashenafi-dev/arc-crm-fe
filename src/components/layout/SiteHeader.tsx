@@ -13,9 +13,8 @@ export function SiteHeader({ variant = 'home' }: { variant?: 'home' | 'auth' }) 
 
   return (
     <header className="flex h-[4.5rem] items-center justify-between gap-4">
-      <Link to="/" className="focus-ring flex items-center gap-2.5 rounded-xl">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-lg font-bold text-white">A</span>
-        <span className="text-lg font-extrabold tracking-tight text-[var(--ink)] uppercase">Arch Ops</span>
+      <Link to="/" className="focus-ring rounded-lg">
+        <img src="/brand/logo-dark.png" alt="Arch Ops" className="h-7 w-auto" draggable={false} />
       </Link>
 
       <nav className="hidden items-center gap-8 md:flex">

@@ -1,0 +1,202 @@
+================================================================================
+ ARCH OPS — LOGO PROMPT PACK
+ Five different directions for the product logo. Generate them all, compare,
+ and pick the strongest.
+================================================================================
+
+WHAT THE LOGO HAS TO SAY
+------------------------
+Arch Ops is the procurement and labor-approval system for an architecture
+firm. A request goes Finance -> General Manager -> Owner, and every step is
+signed off and logged. The logo should feel like three things at once:
+  - Architecture: structure, arches, blueprints, precise geometry
+  - Approval: a checkmark, a seal, "signed off"
+  - Flow: steps moving forward in order
+It should look confident and bold, like the site: black, heavy type, one hot
+red accent and a touch of sun yellow.
+
+
+BRAND COLOURS (use only these)
+------------------------------
+  Signal red   #EA4B2C   primary mark colour
+  Ink black    #181412   warm near-black, for type and outlines
+  Sun yellow   #F4C534   small accent only (a dot, a check, a corner)
+  Warm canvas  #F3F1EE   the light background the logo usually sits on
+  White        #FFFFFF   for the reversed version on red or black
+
+Font the site uses: Onest (Black/ExtraBold for the wordmark). Type the name
+yourself in Onest after generating the symbol. AI tools often misspell text.
+
+
+LOGO RULES (every prompt already follows these)
+-----------------------------------------------
+1. Flat vector style: solid shapes, no gradients, no 3D, no shadows, no
+   textures, no photo effects.
+2. Simple enough to read at 16 px (favicon) and 32 px (sidebar tile).
+   At most 2 to 3 shapes in the symbol.
+3. Works in one colour: it must still read in all-black and all-white.
+4. Geometric and precise: built on a grid, consistent stroke weights, round
+   or square ends applied the same way everywhere.
+5. Max 2 brand colours in the main version (red + ink); yellow only as a
+   tiny accent.
+6. No clip-art clichés: no house icon, no generic crane, no globe, no
+   shaking hands, no swooshes.
+7. Centred with generous clear space around it.
+8. Transparent background for the main version. Solid backgrounds are only
+   for the alternate "app icon" versions (red tile or ink tile), noted per
+   prompt.
+
+Negative prompt (add wherever the tool supports it):
+  gradient, 3D, bevel, shadow, glow, texture, photo, realistic, mockup,
+  paper, wall, busy background, multiple logos, grid of options, clip art,
+  house icon, globe, handshake, swoosh, watercolor, sketch, extra text,
+  misspelled text, watermark
+
+
+WHERE THE FILES GO
+------------------
+  public/brand/logo-mark.png        symbol only, transparent (sidebar/header tile)
+  public/brand/logo-full.png        symbol + "Arch Ops" wordmark, transparent
+  public/brand/logo-mark-red.png    app icon: white symbol on a red rounded tile
+  public/brand/logo-mark-ink.png    app icon: white/red symbol on an ink tile
+  public/favicon.svg                vectorise the chosen mark (Illustrator
+                                    Image Trace, Figma, or vectorizer.ai)
+Export PNGs at 1024 x 1024 px. Once you've picked one, the code can be
+switched from the current red "A" tile to the real logo.
+
+
+================================================================================
+ OPTION 1 — "CHECKED A" MONOGRAM (lettermark)
+================================================================================
+Idea:   A bold geometric capital A whose crossbar is a checkmark. It reads as
+        the letter A (Arch Ops) and as "approved" at the same time. The most
+        direct option and the closest to the current red "A" tile.
+Best for: favicon, sidebar tile, app icon.
+
+COPY-PASTE PROMPT (transparent):
+Minimal flat vector logo symbol for "Arch Ops", an architecture-firm
+purchase-approval app: a bold geometric capital letter A drawn with thick
+uniform strokes and slightly rounded corners, where the horizontal crossbar is
+replaced by a clean checkmark that flows out of the right leg. Letter in
+signal red #EA4B2C, with a tiny sun-yellow #F4C534 dot at the end of the check.
+Precise grid construction, strong negative space, legible at 16 pixels,
+centred with generous clear space, isolated on a fully transparent background,
+flat vector, no gradients, no shadows, no 3D, no text.
+
+ALT VERSION (solid app-icon tile):
+Same logo symbol as above in white, centred on a signal-red #EA4B2C rounded-
+square app icon tile with 22% corner radius, flat vector, no gradients, no
+shadows, no text.
+
+
+================================================================================
+ OPTION 2 — "ARCH + CHECK" SYMBOL (abstract architecture)
+================================================================================
+Idea:   A single semicircular arch (the architecture cue, and literally "Arch")
+        with a checkmark sitting inside its opening, like a doorway that has
+        been approved. Elegant and timeless.
+Best for: full logo with wordmark, website header.
+
+COPY-PASTE PROMPT (transparent):
+Minimal flat vector logo symbol: a thick architectural arch, a semicircle on
+two short pillars, drawn in warm near-black #181412 with uniform stroke weight,
+and inside the arch opening a bold signal-red #EA4B2C checkmark, as if the
+doorway itself has been approved. Balanced negative space, geometric grid
+construction, rounded stroke ends, simple enough to read at 16 pixels,
+centred with generous clear space, isolated on a fully transparent background,
+flat vector, no gradients, no shadows, no 3D, no text.
+
+ALT VERSION (solid app-icon tile):
+Same arch and checkmark symbol in white with the checkmark in sun yellow
+#F4C534, centred on a warm near-black #181412 rounded-square app icon tile
+with 22% corner radius, flat vector, no gradients, no shadows, no text.
+
+
+================================================================================
+ OPTION 3 — "THREE STEPS" MARK (the approval flow)
+================================================================================
+Idea:   Three solid blocks rising left to right like stairs, one block per
+        approval stage (Finance, GM, Owner). The top step is red and carries
+        a small yellow check. Together the steps also suggest a building
+        skyline or the letter A in profile. Tells the product's story.
+Best for: brand storytelling, landing page, pitch deck.
+
+COPY-PASTE PROMPT (transparent):
+Minimal flat vector logo symbol: three solid rounded-corner blocks rising in
+height from left to right like a staircase, representing three approval
+stages. The first two blocks in warm near-black #181412, the tallest block on
+the right in signal red #EA4B2C with a small sun-yellow #F4C534 checkmark cut
+into its top corner. Equal spacing between blocks, precise grid construction,
+bold and compact, reads as both steps and a small architectural skyline,
+legible at 16 pixels, centred with generous clear space, isolated on a fully
+transparent background, flat vector, no gradients, no shadows, no 3D, no text.
+
+ALT VERSION (solid app-icon tile):
+Same three-step symbol in white, with the tallest block in sun yellow #F4C534,
+centred on a signal-red #EA4B2C rounded-square app icon tile with 22% corner
+radius, flat vector, no gradients, no shadows, no text.
+
+
+================================================================================
+ OPTION 4 — "APPROVAL SEAL" EMBLEM (stamp)
+================================================================================
+Idea:   A circular rubber-stamp seal: a bold ring, a small blueprint grid
+        inside, and a heavy checkmark stamped across it. Says "signed off,
+        official, on record". It has the most character but needs care to
+        stay simple.
+Best for: stamps on approved documents, badges, social avatar.
+
+COPY-PASTE PROMPT (transparent):
+Minimal flat vector emblem logo: a bold circular seal made of one thick
+signal-red #EA4B2C ring. Inside, a very subtle 3 by 3 blueprint grid of thin
+lines in the same red at lower weight, and across the centre a heavy stamped
+checkmark in warm near-black #181412 that slightly breaks out of the ring on
+the right, like an official approval stamp. Clean geometric construction,
+only three elements, legible at 24 pixels, centred with generous clear space,
+isolated on a fully transparent background, flat vector, no gradients, no
+shadows, no distressed texture, no 3D, no text or lettering on the ring.
+
+ALT VERSION (solid app-icon tile):
+Same seal emblem in white with the checkmark in sun yellow #F4C534, centred on
+a warm near-black #181412 circular badge background, flat vector, no
+gradients, no shadows, no text.
+
+
+================================================================================
+ OPTION 5 — "BLUEPRINT CORNER" WORDMARK (type-led)
+================================================================================
+Idea:   A type-first logo. "ARCH OPS" in heavy geometric capitals, where the
+        counter of the letter A is a small red right-angle corner, the mark
+        architects use for square corners on a drawing. Confident, editorial
+        and very "brand". Generate for the layout idea, then rebuild the
+        letters in Onest Black so the spelling is exact.
+Best for: website header, documents, invoices, email signature.
+
+COPY-PASTE PROMPT (transparent):
+Minimal flat vector wordmark logo reading exactly "ARCH OPS" in heavy geometric
+sans-serif capitals, similar to Onest Black, tight letter spacing, warm
+near-black #181412. The triangular counter inside the first letter A is filled
+with a small solid signal-red #EA4B2C right-angle corner shape, like an
+architect's square-corner mark on a blueprint, and a tiny sun-yellow #F4C534
+square dot sits after the final S. Horizontal layout, perfectly aligned
+baseline, crisp and bold, centred with generous clear space, isolated on a
+fully transparent background, flat vector, no gradients, no shadows, no 3D,
+correct spelling "ARCH OPS", no other text.
+
+ALT VERSION (solid banner):
+Same "ARCH OPS" wordmark in white with the red corner and yellow dot kept,
+centred on a warm near-black #181412 horizontal banner, flat vector, no
+gradients, no shadows, no other text.
+
+
+--------------------------------------------------------------------------------
+ HOW TO PICK THE WINNER
+--------------------------------------------------------------------------------
+[ ] Shrink it to 16 px: can you still tell what it is?
+[ ] Turn it all-black and all-white: does it still work?
+[ ] Put it on the warm canvas (#F3F1EE) and on the dark sidebar (#1D1A18)
+[ ] Does it say architecture + approval without explaining it?
+[ ] Would it look good stamped on an approved purchase request?
+[ ] Is it different enough from generic "construction company" logos?
+Tip: Options 1 and 3 usually win for small sizes. Option 2 or 5 pairs
+nicely with them as the full logo for the header.
